@@ -121,7 +121,7 @@ export default class Login extends Component {
 
     renderRedirect() {
         if (this.props.getUsuario()) {
-            return <Redirect to='/' />
+            return <Redirect to='/pagare/crear' />
         }
     }
 
@@ -143,7 +143,7 @@ export default class Login extends Component {
                         <Col xs="0" sm="1" md="4" large="4" xl="4"></Col>
                         <Col xs="12" sm="10" md="4" large="4" xl="4">
                             <h1 className="title font-weight-bold med">
-                                Ingresar
+                                Crear Pagaré
                             </h1>
                         </Col>
                         <Col xs="0" sm="1" md="4" large="4" xl="4"></Col>

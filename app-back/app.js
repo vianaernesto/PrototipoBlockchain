@@ -11,7 +11,7 @@ const cors = require("cors");
  * Routers
  */
 var usersRouter = require('./routes/users.js');
-var transactionsRouter = require('./routes/transactions.js');
+var pagaresRouter = require('./routes/pagares.js');
 
 var app = express();
 
@@ -30,7 +30,7 @@ app.use(express.static(path.join(__dirname, 'front/build')));
  * Routers use
  */
 app.use('/users', usersRouter);
-app.use('/transactions', transactionsRouter);
+app.use('/pagares', pagaresRouter);
 
 
 

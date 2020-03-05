@@ -8,6 +8,7 @@ import 'bootstrap/dist/js/bootstrap.min.js';
 
 import Menu from "../Menu/Menu";
 import Login from "../Login/Login.js";
+import CrearPagare from "../Transaction/CrearPagare.js";
 
 let jwt = require('jsonwebtoken');
 const cookies = new Cookies();
@@ -46,6 +47,7 @@ export default class App extends React.Component {
               <Menu getUsuario={this.getUsuario} removeUsuario={this.removeUsuario}  />
               <Switch>
                 <Route exact path="/login" component={(props) => <Login {...props} setUsuario={this.setUsuario} getUsuario={this.getUsuario} />} />
+                <PrivateRoute exact path="/pagare/crear" component={CrearPagare} getUsuario={this.getUsuario} />
               </Switch>
             </div>
           </div>
