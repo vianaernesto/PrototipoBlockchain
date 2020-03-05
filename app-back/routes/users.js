@@ -1,9 +1,23 @@
 var express = require('express');
 var router = express.Router();
+const ObjectId =require("mongodb").ObjectID;
+const {Connection} = require("../db/Mongolib");
+const middleware = require("../Autentication/middleware");
+var HandlerGenerator = require("../Autentication/HandlerGenerator.js");
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
+HandlerGenerator = new HandlerGenerator();
+
+const db = "prototipo";
+const collection = "users";
+
+/**
+ * LOG IN
+ */
+router.post("/login", HandlerGenerator.login);
+
+/**
+ * REGISTER
+ */
+router.post("/", HandlerGenerator.registro);
 
 module.exports = router;
