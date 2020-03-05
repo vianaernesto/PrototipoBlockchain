@@ -10,11 +10,11 @@ module.exports = {
         hasher.update(plusSalt);
         return hasher.digest('hex');
     },
-    verificarUsuario: (username, password) => {
+    verificarUsuario: (usuario, contrasenia) => {
         return new Promise((resolve,reject) =>{
             Connection.connectToMongo().then(client =>{
-                client.db().collection(config.USUARIOS).findOne({
-                    usuario: username, contrasenia: password},
+                client.db("prototipo").collection(config.USUARIOS).findOne({
+                    usuario: usuario, contrasenia: contrasenia},
                     (err, document) => {
                         if(err) reject(err);
                         else if (!document) resolve(document);

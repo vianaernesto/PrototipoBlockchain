@@ -1,0 +1,42 @@
+nav {
+    font-weight: 500;
+}
+.nav-item {
+    font-weight: bold !important;
+}
+nav.navbar-toggler, .navbar-toggler-icon {
+    color: #6E7271 !important;
+    border-color: #6E7271 !important;
+}
+.navbar-brand {
+    color: #003459 !important;
+    font-weight: 700;
+    font-style: normal;
+    letter-spacing: 0.05rem;
+    line-height: 2rem;
+    font-size: 1.5rem;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+}
+span.prefix {
+    color: #00171F;
+}
+.profilePic {
+    cursor: pointer;
+    transition: all 0.1s ease-out;
+    -webkit-transition: all 0.1s ease-out;  
+    border: 2px solid #003459 !important;
+    border-radius: 50%;
+}
+.profilePic:hover, .profilePic:focus {
+    border: 4px solid #00A8E8 !important;
+}
+div.sticky {
+    position: sticky;
+    top: 100px;
+    padding: 50px;
+    font-size: 20px;
+  }
+  

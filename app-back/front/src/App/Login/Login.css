@@ -1,0 +1,29 @@
+.prueba {
+    width: 25%;
+    height: 75%;
+}
+
+.border-container{
+    border: solid;
+    border-width: 1px;
+    border-radius: 5px;
+    border-color: lightgray;
+}
+
+.login-container {
+    padding: 4%;
+}
+
+.content-body {
+    padding-top: 3%;
+}
+
+.error-container {
+    background-color: lightpink;
+    border-radius: 5px;
+    padding: 2%;
+}
+
+.cuenta-inexistente {
+    padding-top: 2%;
+}

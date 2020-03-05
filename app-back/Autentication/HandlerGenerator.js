@@ -22,8 +22,8 @@ class HandlerGenerator {
                             success: false,
                             message: 'Nombre de usuario o contraseña incorrecta'
                         });
+                        console.log("Aquí")
                     } 
-
                     else {
                         
                         let token = jwt.sign({nombreUsuario: doc.nombreUsuario, nombre: doc.nombre, apellido : doc.apellido, cedula: doc.cedula, correo: doc.correo, _id: doc._id},

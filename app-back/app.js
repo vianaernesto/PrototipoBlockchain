@@ -23,27 +23,25 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(cors());
 app.use(express.static(path.join(__dirname, 'front/build')));
 
 /**
- * Routes use
+ * Routers use
  */
 app.use('/users', usersRouter);
 app.use('/transactions', transactionsRouter);
 
 
-app
-  .use(express.json())
-  .use(cors())
-  .use(express.urlencoded({extended: false}))
-  .use(cookieParser())
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
 });
 
-const PORT = "5000";
+const PORT = normalizePort("5000");
+
+
 
 app.listen(PORT, () => {
   console.log(`Listening on ${PORT}`);
@@ -60,5 +58,16 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+  if (isNaN(port)) {
+    return val; // pipe
+  }
+  if (port >= 0) {
+    return port; // port
+  }
+  return false;
+}
 
 module.exports = app;
