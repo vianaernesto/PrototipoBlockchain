@@ -19,6 +19,11 @@ export default class Navbar extends Component {
         if(this.props.getUsuario()) {
             return (
                 <ul className="navbar-nav ml-0 align-items-end">
+                    <li className="nav-item mx-md-2">
+                        <Link to="/pagare/crear" className="nav-link">
+                            Crear Pagaré
+                        </Link>
+                    </li>
                     {this.revisarLogin()}
                 </ul>
             );
