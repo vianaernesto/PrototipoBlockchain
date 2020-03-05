@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const { Connection } = require("./db/Mongolib");
 const middleware = require("./Autentication/middleware");
+const cors = require("cors");
 
 /**
  * Routers
@@ -29,6 +30,13 @@ app.use(express.static(path.join(__dirname, 'front/build')));
  */
 app.use('/users', usersRouter);
 app.use('/transactions', transactionsRouter);
+
+
+app
+  .use(express.json())
+  .use(cors())
+  .use(express.urlencoded({extended: false}))
+  .use(cookieParser())
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
