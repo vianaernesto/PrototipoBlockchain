@@ -1,13 +1,85 @@
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: 'Lato', sans-serif;
+  color: #418AF2;
+  overflow-x: hidden;
+}
+.title, .place, h1, h2, h3, h4, h5, h6 {
+  font-family: 'Karla', sans-serif;
+}
+.med {
+  font-size: 2.5rem;
+}
+.host {
+  min-height: 90vh;
+  margin-top: 12vh;
+}
+.host-special {
+  min-height: 90vh;
+  margin-top: 8vh;
+}
+.customBody {
+  font-family: 'Lato', sans-serif;
+  font-weight: 500;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* BOTONES Y ENLACES */
+.but-outline{
+  cursor: pointer;
+  font-weight: 600;
+  border: 2px solid transparent;
+  text-decoration: none;
+  padding: 0.4rem 1rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  border-radius: 3rem;
+  -webkit-transition: all 0.3s ease-out;
+  transition: all 0.3s ease-out;
+  color: #418AF2 !important;
+  background-color: transparent;
+  background-image: none;
+  border-color: #418AF2 !important;
+}
+.but-outline:hover, .but-outline:focus {
+  text-decoration: none;
+  color: white !important;
+  background-color: #418AF2 !important;
+  border-color: #418AF2 !important;
+}
+.but-solid{
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.4rem 1rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  border-radius: 3rem;
+  -webkit-transition: all 0.3s ease-out;
+  transition: all 0.3s ease-out;
+  background-color:  #418AF2 !important;
+  color: white !important;
+  background-image: none;
+  border: 2px solid transparent;
+  border-color: #418AF2 !important;
+}
+.but-solid:hover, .but-solid:focus {
+  text-decoration: none;
+  color: white !important;
+  background-color: #00A8E8 !important;
+  border-color: #00A8E8 !important;
+}
+.but-solid:disabled {
+  color: white !important;
+  cursor: default;
+  background-color: #6E7271 !important;
+  border-color: #6E7271 !important;
+  opacity: 0.5;
+}
+
+a {
+  color: #003459 !important;
+  transition: all 0.3s ease-out;
+  -webkit-transition: all 0.3s ease-out;  
+}
+a:focus, a:hover {
+  color: #00A8E8 !important;
 }

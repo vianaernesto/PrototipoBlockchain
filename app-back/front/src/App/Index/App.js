@@ -6,9 +6,12 @@ import Cookies from 'universal-cookie';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.min.js';
 
+import "./App.css"
+
 import Menu from "../Menu/Menu";
 import Login from "../Login/Login.js";
 import CrearPagare from "../Transaction/CrearPagare.js";
+import Home from "../Home/Home.js";
 
 let jwt = require('jsonwebtoken');
 const cookies = new Cookies();
@@ -46,6 +49,7 @@ export default class App extends React.Component {
             <div role="main" className="container-fluid">
               <Menu getUsuario={this.getUsuario} removeUsuario={this.removeUsuario}  />
               <Switch>
+                <Route exact path="/" component={(props) => <Home {...props} getUsuario={this.getUsuario}/>} />
                 <Route exact path="/login" component={(props) => <Login {...props} setUsuario={this.setUsuario} getUsuario={this.getUsuario} />} />
                 <PrivateRoute exact path="/pagare/crear" component={CrearPagare} getUsuario={this.getUsuario} />
               </Switch>
