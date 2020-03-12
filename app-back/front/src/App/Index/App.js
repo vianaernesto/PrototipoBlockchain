@@ -12,6 +12,8 @@ import Menu from "../Menu/Menu";
 import Login from "../Login/Login.js";
 import CrearPagare from "../Transaction/CrearPagare.js";
 import Home from "../Home/Home.js";
+import Footer from "../Footer/Footer.js";
+import Balance from "../Balance/Balance.js";
 
 let jwt = require('jsonwebtoken');
 const cookies = new Cookies();
@@ -52,8 +54,10 @@ export default class App extends React.Component {
                 <Route exact path="/" component={(props) => <Home {...props} getUsuario={this.getUsuario}/>} />
                 <Route exact path="/login" component={(props) => <Login {...props} setUsuario={this.setUsuario} getUsuario={this.getUsuario} />} />
                 <PrivateRoute exact path="/pagare/crear" component={CrearPagare} getUsuario={this.getUsuario} />
+                <PrivateRoute exact path="/balance" component={Balance} getUsuario={this.getUsuario} />
               </Switch>
             </div>
+            <Footer/>
           </div>
         );
       }
