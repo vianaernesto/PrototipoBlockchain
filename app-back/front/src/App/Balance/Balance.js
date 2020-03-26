@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Link } from "react-router-dom";
 
 import "./Balance.css"
+import PagareDetail from "./PagareDetail.js";
 
 class Balance extends Component {
     constructor(props) {
@@ -81,7 +82,7 @@ class Balance extends Component {
                                                     <li className="list-group-item"><span  className="text-left font-weight-bold">Fecha de Expiración: </span><span className="text-right">{x.fechaExpiracion}</span></li>
                                                 </ul>
                                                 <div className="card-body">
-                                                <button className="but-solid">Detalle</button>
+                                                <Link to = "/pagareDetail"><button className="but-solid">Detalle</button></Link>
                                                 </div>
                                         </div>
                                     </div>
@@ -124,7 +125,7 @@ class Balance extends Component {
                                                     <li className="list-group-item"><span  className="text-left font-weight-bold">Fecha de Expiración: </span><span className="text-right">{x.fechaExpiracion}</span></li>
                                                 </ul>
                                                 <div className="card-body">
-                                                <button className="but-solid">Detalle</button>
+                                                <Link to = "/pagareDetail"><button className="but-solid">Detalle</button></Link>
                                                 </div>
                                         </div>
                                     </div>
