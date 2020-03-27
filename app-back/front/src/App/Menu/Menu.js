@@ -63,6 +63,7 @@ export default class Navbar extends Component {
                     </div>
                     <div className="dropdown-menu dropdown-menu-sm-right" aria-labelledby="drop">
                         <Link className="dropdown-item" to="/login">Ingresar</Link>
+                        <Link className="dropdown-item" to="/registrar">Registrarse</Link>
                     </div>
                 </li>
             );
