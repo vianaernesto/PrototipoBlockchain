@@ -8,25 +8,25 @@ class HandlerGenerator {
 
     login(req,res) {
 
-        let usuario = req.body.usuario;
+        let cedula = req.body.cedula;
         let contrasenia = req.body.contrasenia;
 
-        if(usuario && contrasenia) {
+        if(cedula && contrasenia) {
 
             contrasenia = security.encriptar(contrasenia);
 
-            security.verificarUsuario(usuario,contrasenia)
+            security.verificarUsuario(cedula,contrasenia)
                 .then(doc =>{
                     if(!doc){
                         res.status(200).json({
                             success: false,
-                            message: 'Nombre de usuario o contraseña incorrecta'
+                            message: 'Cedula o contraseña incorrecta'
                         });
                         console.log("Aquí")
                     } 
                     else {
                         
-                        let token = jwt.sign({nombreUsuario: doc.nombreUsuario, nombre: doc.nombre, apellido : doc.apellido, cedula: doc.cedula, correo: doc.correo, _id: doc._id},
+                        let token = jwt.sign({ cedula: doc.cedula, nombres: doc.nombre, apellidos : doc.apellido, correo: doc.correo, _id: doc._id},
                             config.secret, { expiresIn: '2h'});
 
                             res.status(200).json({
@@ -59,21 +59,21 @@ class HandlerGenerator {
 
     registro(req,res){
 
-        let usuario = req.body.usuario;
-        let contrasenia = req.body.contrasenia;
-        let nombre = req.body.nombre;
-        let apellido = req.body.apellido;
         let cedula = req.body.cedula;
+        let contrasenia = req.body.contrasenia;
+        let nombres = req.body.nombres;
+        let apellidos = req.body.apellidos;
         let correo = req.body.correo;
+        
 
-        if(usuario && contrasenia && nombre && apellido && cedula && correo) { 
+        if(cedula && contrasenia && nombres && apellidos && cedula && correo) { 
             contrasenia = security.encriptar(contrasenia);
-            security.verificarUsuario(usuario, contrasenia)
+            security.verificarUsuario(cedula, contrasenia)
                 .then(doc => {
                     if(!doc){
                         conn.then(client => {
                             client.db().collection(config.USUARIOS).insertOne(
-                                {usuario : usuario, contrasenia: contrasenia, nombre : nombre, apellido: apellido, cedula: cedula, correo: correo},
+                                {cedula : cedula, contrasenia: contrasenia, nombres : nombres, apellidos: apellidos, cedula: cedula, correo: correo},
                                 (err, r) =>{
                                     if(err){
                                         res.status(200).json({
@@ -86,9 +86,9 @@ class HandlerGenerator {
                                             success: true,
                                             message: 'Succesfully created new user',
                                             data: {
-                                                usuario: usuario,
-                                                nombre: nombre,
-                                                apellido: apellido
+                                                cedula: cedula,
+                                                nombres: nombres,
+                                                apellidos: apellidos
                                             }
                                         });
                                     }

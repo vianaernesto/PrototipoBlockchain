@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import { Link, Redirect } from 'react-router-dom';
 
+import "./Login.css"
+
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
@@ -24,20 +26,18 @@ export default class Login extends Component {
         super(props);
 
         this.state = {
-            usuario: '',
+            cedula: '',
             contrasenia: '',
             incorrectLogin: false,
             errMsg: '',
             errors: {
-                usuario: '',
-                nombre: '',
-                correo: '',
+                cedula: '',
                 contrasenia: ''
             }
         }
 
-        this.handleUserChange = this.handleUserChange.bind(this);
-        this.handlePassChange = this.handlePassChange.bind(this);
+        this.handleCedulaChange = this.handleCedulaChange.bind(this);
+        this.handleContraseniaChange = this.handleContraseniaChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.login = this.login.bind(this);
     }
@@ -48,27 +48,27 @@ export default class Login extends Component {
         let errors = this.state.errors;
 
         switch (name) {
-            case 'usuario':
+            case 'cedula':
                 errors.usuario =
                     value.length < 3
-                        ? "Nombre de usuario muy corto"
+                        ? "Cedula muy corta"
                         : '';
                 break;
             case 'contrasenia':
                 errors.contrasenia =
                     value.length < 6
-                        ? "Contrasenia muy corta, debe ser de más de 6"
+                        ? "Contrasenia muy corta, debe ser de más de 6 digitos"
                         : '';
                 break;
             default:
         }
     }
 
-    async login(usuario, contrasenia) {
+    async login(cedula, contrasenia) {
         await axios.post(
             '/users/login',
             {
-                "usuario": usuario,
+                "cedula": cedula,
                 "contrasenia": contrasenia
             },
             {
@@ -78,34 +78,34 @@ export default class Login extends Component {
             }
         ).then(response => {
             if (response.data.success) {
-                // cookies.set('token', response.data.token);
                 this.props.setUsuario(response.data.token);
                 this.props.history.push('/');
                 console.log(this.props.getUsuario())
             }
             else {
-                this.setState({ usuario: this.state.usuario, contrasenia: this.state.contrasenia, incorrectLogin: true, errMsg: "Por favor llene todos los campos"})
+                this.setState({ cedula: this.state.cedula, contrasenia: this.state.contrasenia, incorrectLogin: true, errMsg: "Por favor llene todos los campos"})
             }
 
 
         }).catch(err => {
             console.log(err)
-            this.setState({ usuario: this.state.usuario, password: this.state.contrasenia, incorrectLogin: true, errMsg: "Login o contraseña incorrectos" })
+            this.setState({ cedula: this.state.cedula, contrasenia: this.state.contrasenia, incorrectLogin: true, errMsg: "Cedula o contraseña incorrectos" })
         })
     }
 
-    handleUserChange(event) {
+    handleCedulaChange(event) {
         this.handleChange(event);
         this.setState({
-            usuario: event.target.value,
+            cedula: parseInt(event.target.value,10),
             contrasenia: this.state.contrasenia
         });
+        console.log(this.state.contrasenia)
     }
 
-    handlePassChange(event) {
+    handleContraseniaChange(event) {
         this.handleChange(event);
         this.setState({
-            usuario: this.state.usuario,
+            cedula: this.state.cedula,
             contrasenia: event.target.value
         });
     }
@@ -113,15 +113,15 @@ export default class Login extends Component {
     handleSubmit(event) {
         event.preventDefault();
 
-            if (this.state.usuario !== "" && !this.state.contrasenia !== "" && validateForm(this.state.errors)) {
-                this.login(this.state.usuario, this.state.contrasenia);
+            if (this.state.cedula !== "" && !this.state.contrasenia !== "" && validateForm(this.state.errors)) {
+                this.login(this.state.cedula, this.state.contrasenia);
             } 
 
     }
 
     renderRedirect() {
         if (this.props.getUsuario()) {
-            return <Redirect to='/pagare/crear' />
+            return <Redirect to='/balance' />
         }
     }
 
@@ -131,14 +131,14 @@ export default class Login extends Component {
         if (this.state.incorrectLogin) {
             incorrectMessage =
                 <Container className="error">
-                   Login o contraseña no es correcta
+                   Cedula o contraseña no es correcta
                 </Container>
         }
 
         return (
             <div className="content-body host">
                 <div>{this.renderRedirect()}</div>
-                <Container>
+                <Container className="login-container">
                     <Row className="justify-content-lg-center">
                         <Col xs="0" sm="1" md="4" large="4" xl="4"></Col>
                         <Col xs="12" sm="10" md="4" large="4" xl="4">
@@ -152,16 +152,16 @@ export default class Login extends Component {
                     <Row className="justify-content-lg-center">
                         <Col xs="0" sm="1" md="3" large="4" xl="4"></Col>
                         <Col xs="12" sm="10" md="6" large="4" xl="4">
-                            <div className="border-container">
+                            <div>
                                 <div className="login-container">
                                     <Form className="text-left">
                                         <Form.Group>
-                                            <Form.Label htmlFor="nombreUsuario">Usuario</Form.Label>
-                                            <Form.Control name="nombreUsuario" id="nombreUsuario" required type="text" onChange={this.handleUserChange}></Form.Control>
+                                            <Form.Label htmlFor="cedula">Cedula</Form.Label>
+                                            <Form.Control name="cedula" id="cedula" required type="text" placeholder="Ej: 123456789" onChange={this.handleCedulaChange}></Form.Control>
                                         </Form.Group>
                                         <Form.Group>
                                             <Form.Label htmlFor="contrasenia">Contraseña</Form.Label>
-                                            <Form.Control name="contrasenia" id="contrasenia" type="password" onChange={this.handlePassChange}></Form.Control>
+                                            <Form.Control name="contrasenia" id="contrasenia" type="text" placeholder="Ej: pas$w0rD" onChange={this.handleContraseniaChange}></Form.Control>
                                         </Form.Group>
                                         <div className="d-flex justify-content-center">
                                             <button type="submit" className="but-solid" onClick={this.handleSubmit}>Ingresar</button>
@@ -175,13 +175,24 @@ export default class Login extends Component {
                     </Row>
 
                 </Container>
-                <Container className="cuenta-inexistente">
+                <Container>
                     <Row>
-                        <Col>
-                            <Link to="/registrar">Registrase</Link>
+                        <Col xs="0" sm="1" md="3" large="4" xl="4"></Col>
+                        <Col xs="0" sm="1" md="3" large="4" xl="4" style={{textAlign:"center"}}>
+                            ¿No tienes una cuenta? <Link to="/registrar"><span style={{color:"#0073b1"}}>Registrate</span></Link>
                         </Col>
+                        <Col xs="0" sm="1" md="3" large="4" xl="4"></Col>
                     </Row>
                 </Container>
+                <Container>
+                <Row>
+                    <Col xs="0" sm="1" md="3" large="4" xl="4"></Col>
+                    <Col xs="0" sm="1" md="3" large="4" xl="4" style={{textAlign:"center"}}>
+                        &nbsp;
+                    </Col>
+                    <Col xs="0" sm="1" md="3" large="4" xl="4"></Col>
+                </Row>
+            </Container>
             </div>
         );
     }

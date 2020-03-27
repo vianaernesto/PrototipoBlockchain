@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import { Link } from "react-router-dom";
 
 import "./Balance.css"
-import PagareDetail from "./PagareDetail.js";
 
 class Balance extends Component {
     constructor(props) {
