@@ -5,6 +5,7 @@ import jsPDF from 'jspdf';
 
 import './CrearPagare.css';
 
+
 class CrearPagare extends Component {
     constructor(props) {
         super(props);
@@ -19,23 +20,28 @@ class CrearPagare extends Component {
             lugarCreacion : "",
             fechaVencimiento : null,
             fechaExpiracion : null,
-            etapa : 1,
+            etapa : 0,
             terminos : "",
             codigoRetiro: "",
             confirmacionRetiro: "",
             rol : 'acreedor',
             redirect : false,
             pdf : {},
+            disableAcreedor : false,
+            disableDeudor : false,
          }
 
          this.redirect = this.redirect.bind(this);
-         this.handleSubmit = this.handleSubmit.bind(this);
-         this.post = this.post.bind(this);
+         this.handleChangeEtapa1 = this.handleChangeEtapa1.bind(this);
+         this.handleEtapa1 = this.handleEtapa1.bind(this);
+         this.handleChangeEtapa2 = this.handleChangeEtapa2.bind(this);
+         this.handleEtapa2 = this.handleEtapa2.bind(this);
          this.isDisabled = this.isDisabled.bind(this);
          this.isSuccessful = this.isSuccessful.bind(this);
          this.renderPreview = this.renderPreview.bind(this);
          this.placeholder = this.placeholder.bind(this);
     }
+
 
     componentDidMount(){
         if(this.props.location.state !== undefined){
@@ -47,12 +53,18 @@ class CrearPagare extends Component {
                     rol: y,
                     nombreAcreedor : usuario.nombre,
                     idAcreedor :usuario.cedula,
+                    disableAcreedor : true,
+                    etapa: 0, ///AQUI ES IMPORTANTISIMO CAMBIARLO POR EL PROPS QUE LLEGA SI LO ABRIMOS DESDE AFUERA
+                    id: '',
                 });
             } else{
                 this.setState({
                     rol: y,
                     nombreDeudor : usuario.nombre,
                     idDeudor :usuario.cedula,
+                    disableDeudor : true,
+                    etapa: 0, ///AQUI ES IMPORTANTISIMO CAMBIARLO POR EL PROPS QUE LLEGA SI LO ABRIMOS DESDE AFUERA
+                    id: '',
                 });
             }
             
@@ -103,53 +115,96 @@ class CrearPagare extends Component {
             return <Redirect to='/balance'/>
         }
     }
-    
 
-    async post(data) {
+    handleChangeEtapa1(event){
+        event.preventDefault();
+        let target = event.target;
+        let  value = target.value;
+        let name = target.name;
+        if(name === 'idDeudor' || name=== 'idAcreedor'){
+            value = parseInt(value,10);
+        }
+        
+        this.setState({
+            [name]: value,
+        });
+
+    }
+
+    handleChangeEtapa2(event){
+        event.preventDefault();
+        let target = event.target;
+        let  value = target.value;
+        let name = target.name;
+        if(name=== 'valor'){
+            value = parseInt(value,10);
+        }
+        this.setState({
+            [name]: value,
+        });
+
+    }
+    
+    handleEtapa1(event) {
+        event.preventDefault();
+        var data = {
+            nombreDeudor: this.state.nombreDeudor,
+            idDeudor : this.state.idDeudor,
+            nombreAcreedor: this.state.nombreAcreedor,
+            idAcreedor : this.state.idAcreedor,
+        }
+        
         axios.post(
-            '/pagares/crear',
+            '/pagares/etapa1',
             data,
             {
                 headers: {
                     'Content-Type': 'application/json'
                 }
             }
-        ).then(response => {
-            if (response.data.success) {
-                // cookies.set('token', response.data.token);
-                response.status(200).json();
-            }
-
-
-        }).catch(err => {
-            console.log(err)
-        })
+        ).then(response =>{
+            let pagare = response.data[0];
+                this.setState({
+                    id:pagare._id,
+                    etapa : pagare.etapa,
+                    disableAcreedor: true,
+                    disableDeudor : true,
+                });
+                
+        });
     }
-    
-    handleSubmit(event) {
+
+    handleEtapa2(event) {
         event.preventDefault();
         var data = {
-            nombreDeudor: this.state.nombreDeudor,
-            firmaDeudor: this.state.firmaDeudor,
-            monto : this.state.monto,
-            cedulaDeudor: this.state.cedulaDeudor,
-            nombreAcreedor : this.state.nombreAcreedor,
-            cedulaAcreedor: this.state.cedulaAcreedor,
-            fechaDeCreacion : this.state.fechaDeCreacion,
-            lugarDeCreacion: this.state.lugarDeCreacion,
-            lugarDeCumplimiento : this.state.lugarDeCumplimiento
-
+            valor :this.state.valor,
+            terminos : this.state.terminos,
         }
-        this.post(data);
+        
+        axios.patch(
+            `/pagares/${this.state.id}/etapa2`,
+            data,
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        ).then(response =>{
+            let pagare = response.data;
+                this.setState({
+                    etapa : pagare.etapa,
+                });
+        });
     }
 
     isDisabled(pEtapa,element){
 
         if(element === 'card'){
+            
             if(pEtapa === this.state.etapa){
                 return '';
             } else{
-                return 'collapsed disabled'
+                return 'collapsed'
             }
         }else if(element === 'aria'){
             if(pEtapa === this.state.etapa){
@@ -169,18 +224,37 @@ class CrearPagare extends Component {
             } else{
                return  false;
             }
+        } else if(element === 'button'){
+            if(pEtapa > this.state.etapa){
+                return true;
+            } else{
+                return false;
+            }
+        } else if(element === 'submit'){
+            if(pEtapa < this.state.etapa){
+                return 'hidden';
+            } else{
+                return 'visible';
+            }
         }
         
+
     }
 
     isSuccessful(pEtapa, element){
         if(element === 'card'){
             if(pEtapa < this.state.etapa){
                 return 'btn-success';
+            }else{
+                return '';
             }
         } else if(element === 'title'){
             if(pEtapa < this.state.etapa){
-                return 'success';
+                return '-success';
+            }else if(pEtapa === this.state.etapa){
+                return '';
+            } else {
+                return '-ongoing';
             }
         }
         
@@ -202,8 +276,8 @@ class CrearPagare extends Component {
             }
         }
         if(input === 'nombreAcreedor'){
-            if(this.state.nombreDeudor !== ""){
-                return `${this.state.nombreDeudor}`;
+            if(this.state.nombreAcreedor !== ""){
+                return `${this.state.nombreAcreedor}`;
             } else{
                 return 'Nombre del deudor';
             }
@@ -252,47 +326,44 @@ class CrearPagare extends Component {
                 <div className="card">
                     <div className="card-header" id="etapa1">
                         <div className="col-md-10">
-                            <button className={`btn ${this.isSuccessful(1,'card')}  ${this.isDisabled(1,'card')}`} data-toggle="collapse" data-target="#etapa1Collapse" aria-expanded={this.isDisabled(1,'aria')} aria-controls="etapa1Collapse">
-                                <h5 className={`title-card ${this.isSuccessful(1,'title')}`}>Información Básica</h5>
+                            <button className={`btn ${this.isSuccessful(0,'card')}  ${this.isDisabled(0,'card')}`} data-toggle="collapse" data-target="#etapa1Collapse" aria-expanded={this.isDisabled(0,'aria')} aria-controls="etapa1Collapse" disabled={this.isDisabled(0,'button')}>
+                                <h5 className={`title-card${this.isSuccessful(0,'title')}`}>Información Básica</h5>
                             </button>
                         </div>
                     </div>
 
-                    <div id="etapa1Collapse" className={`collapse ${this.isDisabled(1,'accordion')}`} aria-labelledby="etapa1" data-parent="#accordion">
+                    <div id="etapa1Collapse" className={`collapse ${this.isDisabled(0,'accordion')}`} aria-labelledby="etapa1" data-parent="#accordion">
                     <div className="row">
                         <form>
                         <div className="row">
                         <div className="col-1 col-md-1 col-lg-1"></div>
-                        <div className="col-4 col-md-4 col-lg-4">
+                        <div className="col-5 col-md-5 col-lg-5">
                             <div className="form-group">
-                                <label htmlFor="valor">Valor</label>
-                                <input type="number" min="1" className="form-control" id="valor" aria-describedby="Valor" placeholder={this.placeholder(1,'valor')} disabled={this.isDisabled(1,'input')}/>
-                                <small id="valorHelp" className="form-text text-muted">valor acordado de prestamo</small>
+                                <label htmlFor="nombreAcreedor">Nombre del Acreedor</label>
+                                <input name= "nombreAcreedor" type="text" className="form-control" id="nombreAcreedor" onChange={this.handleChangeEtapa1} aria-describedby="nombreAcreedor" placeholder={this.placeholder(0,'nombreAcreedor')} disabled={this.state.disableAcreedor}/>
                             </div>
                             <div className="form-group">
-                                <label htmlFor="Condiciones">Condiciones</label>
-                                <input type="text" className="form-control" id="exampleInputPassword1" placeholder="5% mensual" disabled={this.isDisabled(1,'input')}/>
+                                <label htmlFor="idAcreedor">Cédula del Acreedor</label>
+                                <input name= "idAcreedor" type="number" min="0" className="form-control" id="idAcreedor" onChange={this.handleChangeEtapa1} placeholder={this.placeholder(0,'idAcreedor')} disabled={this.state.disableAcreedor}/>
                             </div>
                         
                         </div>
-                        <div className="col-2 col-md-2 col-lg-2"></div>
-                        <div className="col-4 col-md-4 col-lg-4">
+                        <div className="col-5 col-md-5 col-lg-5">
                             <div className="form-group">
-                                <label htmlFor="valor">Valor</label>
-                                <input type="number" min="1" className="form-control" id="valor" aria-describedby="Valor" placeholder={this.placeholder(1,'valor')} disabled={this.isDisabled(1,'input')}/>
-                                <small id="valorHelp" className="form-text text-muted">valor acordado de prestamo</small>
+                                <label htmlFor="nombreDeudor">Nombre del deudor</label>
+                                <input  name= "nombreDeudor" type="text" className="form-control" id="nombreDeudor" onChange={this.handleChangeEtapa1} aria-describedby="nombreDeudor" placeholder={this.placeholder(0,'nombreDeudor')} disabled={this.state.disableDeudor}/>
                             </div>
                             <div className="form-group">
-                                <label htmlFor="Condiciones">Condiciones</label>
-                                <input type="text" className="form-control" id="exampleInputPassword1" placeholder="5% mensual" disabled={this.isDisabled(1,'input')}/>
-                            </div> 
+                                <label htmlFor="idDeudor">Cédula del Deudor</label>
+                                <input name= "idDeudor" type="number" min="0" className="form-control" id="idDeudor" onChange={this.handleChangeEtapa1}  placeholder={this.placeholder(0,'idDeudor')} disabled={this.state.disableDeudor}/>
+                            </div>
                         </div>
                         <div className="col-1 col-md-1 col-lg-1"></div>
                         </div>      
                         <div className="row">
                         <div className="col-3 col-md-3 col-lg-5"></div>
                         <div className="col-6 col-md-6 col-lg-6">
-                            <button type="submit" className="btn btn-primary">Siguiente Paso</button>
+                            <button type="submit" className="btn btn-primary" onClick={this.handleEtapa1} style={{visibility:this.isDisabled(0,'submit')}} >Siguiente Paso</button>
                         </div>  
                             <div className="col-1 col-md-1 col-lg-1"></div>
                         </div>                      
@@ -306,29 +377,29 @@ class CrearPagare extends Component {
             <div className="row">&nbsp;</div>
             <div id="accordion">
                 <div className="card">
-                    <div className="card-header" id="etapa1">
+                    <div className="card-header" id="etapa2">
                         <div className="col-md-10">
-                            <button className={`btn ${this.isSuccessful(2,'card')}  ${this.isDisabled(2,'card')}`} data-toggle="collapse" data-target="#etapa1Collapse" aria-expanded={this.isDisabled(2,'aria')} aria-controls="etapa1Collapse">
-                                <h5 className={`title-card ${this.isSuccessful(2,'title')}`}>Acuerdos del prestamo</h5>
+                            <button className={`btn ${this.isSuccessful(1,'card')}  ${this.isDisabled(1,'card')}`} data-toggle="collapse" data-target="#etapa2Collapse" aria-expanded={this.isDisabled(1,'aria')} aria-controls="etapa2Collapse" disabled={this.isDisabled(1,'button')} >
+                                <h5 className={`title-card${this.isSuccessful(1,'title')}`}>Acuerdos del prestamo</h5>
                             </button>
                         </div>
                     </div>
 
-                    <div id="etapa1Collapse" className={`collapse ${this.isDisabled(2,'accordion')}`} aria-labelledby="etapa1" data-parent="#accordion">
+                    <div id="etapa2Collapse" className={`collapse ${this.isDisabled(1,'accordion')}`} aria-labelledby="etapa2" data-parent="#accordion">
                     <div className="row">
                     <div className="col-1 col-md-1 col-lg-1"></div>
                     <div className="col-5 col-md-5 col-lg-5">
                         <form>
                             <div className="form-group">
                                 <label htmlFor="valor">Valor</label>
-                                <input type="number" min="1" className="form-control" id="valor" aria-describedby="Valor" placeholder={this.placeholder(2,'valor')} disabled={this.isDisabled(2,'input')}/>
+                                <input name="valor" type="number" min="1" onChange={this.handleChangeEtapa2} className="form-control" id="valor" aria-describedby="Valor" placeholder={this.placeholder(1,'valor')} disabled={this.isDisabled(1,'input')}/>
                                 <small id="valorHelp" className="form-text text-muted">valor acordado de prestamo</small>
                             </div>
                             <div className="form-group">
                                 <label htmlFor="Condiciones">Condiciones</label>
-                                <input type="text" className="form-control" id="exampleInputPassword1" placeholder="5% mensual" disabled={this.isDisabled(2,'input')}/>
+                                <input name="terminos" type="text" onChange={this.handleChangeEtapa2} className="form-control" id="terminos" placeholder="5% mensual" disabled={this.isDisabled(1,'input')}/>
                             </div>
-                                <button type="submit" className="btn btn-primary">Crear pagaré</button>
+                                <button type="submit" className="btn btn-primary" onClick={this.handleEtapa2} style={{visibility:this.isDisabled(1,'submit')}} >Siguiente Paso</button>
                         </form>
                      </div>
                      <div className="col-6 col-md-6 col-lg-6"></div>
