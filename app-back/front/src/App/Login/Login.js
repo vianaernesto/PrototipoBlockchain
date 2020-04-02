@@ -80,7 +80,6 @@ export default class Login extends Component {
             if (response.data.success) {
                 this.props.setUsuario(response.data.token);
                 this.props.history.push('/');
-                console.log(this.props.getUsuario())
             }
             else {
                 this.setState({ cedula: this.state.cedula, contrasenia: this.state.contrasenia, incorrectLogin: true, errMsg: "Por favor llene todos los campos"})
@@ -99,7 +98,6 @@ export default class Login extends Component {
             cedula: parseInt(event.target.value,10),
             contrasenia: this.state.contrasenia
         });
-        console.log(this.state.contrasenia)
     }
 
     handleContraseniaChange(event) {

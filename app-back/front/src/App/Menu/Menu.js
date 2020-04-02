@@ -20,11 +20,6 @@ export default class Navbar extends Component {
             return (
                 <ul className="navbar-nav ml-0 align-items-end">
                     <li className="nav-item mx-md-2">
-                        <Link to="/pagare/crear" className="nav-link">
-                            Crear Pagaré
-                        </Link>
-                    </li>
-                    <li className="nav-item mx-md-2">
                         <Link to="/balance" className="nav-link">
                             Balance
                         </Link>

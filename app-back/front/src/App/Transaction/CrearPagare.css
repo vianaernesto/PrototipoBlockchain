@@ -11,6 +11,19 @@ h1, h2, h3, h4 {
     font-family: 'Karla', sans-serif;
 }
 
+
+.success{
+    color:white;
+}
+
+.ongoing{
+    color:black;
+}
+
+.success:hover{
+    color: whitesmoke;
+}
+
 .title-card {
     color: #003459 !important;
     transition: all 0.1s ease-out;
@@ -30,3 +43,15 @@ h1, h2, h3, h4 {
 
     color: #00A8E8 !important;
 }
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type=number] {
+    -moz-appearance:textfield; /* Firefox */
+}
+

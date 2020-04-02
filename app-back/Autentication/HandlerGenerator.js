@@ -16,23 +16,23 @@ class HandlerGenerator {
             contrasenia = security.encriptar(contrasenia);
 
             security.verificarUsuario(cedula,contrasenia)
-                .then(doc =>{
+                .then(doc =>{    
                     if(!doc){
                         res.status(200).json({
                             success: false,
                             message: 'Cedula o contraseña incorrecta'
                         });
-                        console.log("Aquí")
                     } 
                     else {
                         
-                        let token = jwt.sign({ cedula: doc.cedula, nombres: doc.nombre, apellidos : doc.apellido, correo: doc.correo, _id: doc._id},
+                        let token = jwt.sign({ cedula: doc.cedula, nombres: doc.nombres, apellidos : doc.apellidos, correo: doc.correo, _id: doc._id},
                             config.secret, { expiresIn: '2h'});
 
                             res.status(200).json({
                                 success: true,
                                 message: 'Successfully added token to user',
-                                token: token
+                                token: token,
+                                nombre: `${doc.nombres} ${doc.apellidos}`,
                             });
                     }
                 })
