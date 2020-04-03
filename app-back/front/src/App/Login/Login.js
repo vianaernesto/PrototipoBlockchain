@@ -1,13 +1,15 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import { Link, Redirect } from 'react-router-dom';
-
+import Cookies from 'universal-cookie';
 import "./Login.css"
 
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form';
+
+
 
 const validateForm = (errors) => {
     let valid = true;
@@ -21,7 +23,12 @@ const validateForm = (errors) => {
     return valid;
 }
 
+const cookies = new Cookies();
+
+
+
 export default class Login extends Component {
+    
     constructor(props) {
         super(props);
 
@@ -78,6 +85,7 @@ export default class Login extends Component {
             }
         ).then(response => {
             if (response.data.success) {
+                cookies.set('token', response.data.token);
                 this.props.setUsuario(response.data.token);
                 this.props.history.push('/');
             }

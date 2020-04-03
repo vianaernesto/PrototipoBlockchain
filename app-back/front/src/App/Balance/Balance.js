@@ -28,6 +28,10 @@ class Balance extends Component {
          }
 
          this.getPagares = this.getPagares.bind(this);
+         this.renderEtapas = this.renderEtapas.bind(this);
+         this.etapaLevel = this.etapaLevel.bind(this);
+         this.etapaTexto = this.etapaTexto.bind(this);
+         this.etapaColor = this.etapaColor.bind(this);
     }
 
     componentDidMount(){
@@ -68,6 +72,85 @@ class Balance extends Component {
                 
             }));
         
+    }
+
+    renderEtapas(pagare){
+        let etapa = pagare.etapa;
+        if(etapa === 2){
+            return(
+                <div>
+                    <li className="list-group-item"><span  className="text-left font-weight-bold">Valor: </span><span className="text-right">{pagare.valor}</span></li>
+                    <li className="list-group-item"><span  className="text-left font-weight-bold">Terminos del prestamo: </span><span className="text-right">{pagare.terminos}</span></li>
+                </div>  
+            )
+        } else if(etapa ===3){
+            return(
+                <div>
+                    <li className="list-group-item"><span  className="text-left font-weight-bold">Valor: </span><span className="text-right">{pagare.valor}</span></li>
+                    <li className="list-group-item"><span  className="text-left font-weight-bold">Creado en: </span><span className="text-right">{pagare.lugarCreacion}</span></li>
+                    <li className="list-group-item"><span  className="text-left font-weight-bold">Fecha de vencimiento: </span><span className="text-right">{new Date(pagare.fechaVencimiento).getDate()}/{new Date(pagare.fechaVencimiento).getMonth() + 1}/{new Date(pagare.fechaVencimiento).getFullYear()}}</span></li>
+
+                </div>  
+            )
+        } else if(etapa ===4){
+            return(
+                <div>
+                    <li className="list-group-item"><span  className="text-left font-weight-bold">Valor: </span><span className="text-right">{pagare.valor}</span></li>
+                    <li className="list-group-item"><span  className="text-left font-weight-bold">Creado en: </span><span className="text-right">{pagare.lugarCreacion}</span></li>
+                    <li className="list-group-item"><span  className="text-left font-weight-bold">Fecha de vencimiento: </span><span className="text-right">{new Date(pagare.fechaVencimiento).getDate()}/{new Date(pagare.fechaVencimiento).getMonth() + 1}/{new Date(pagare.fechaVencimiento).getFullYear()}}</span></li>
+                    <li className="list-group-item"><span  className="text-left font-weight-bold">Fecha de Expiración: </span><span className="text-right">{new Date(pagare.fechaExpiracion).getDate()}/{new Date(pagare.fechaExpiracion).getMonth() + 1}/{new Date(pagare.fechaExpiracion).getFullYear()}}</span></li>
+                    <li className="list-group-item"><span  className="text-left font-weight-bold">Valor: </span><span className="text-right">{pagare.valor}</span></li>
+                    <li className="list-group-item"><span  className="text-left font-weight-bold">Creado en: </span><span className="text-right">{pagare.lugarCreacion}</span></li>
+                    <li className="list-group-item"><span  className="text-left font-weight-bold">Firma: </span><span className="text-right etapa4">Firmado</span></li>
+                </div>  
+            )
+        }
+        
+    }
+
+    etapaLevel(etapa){
+        if(etapa === 1){
+            return 'bg-danger';
+        }
+        else if(etapa === 1.5){
+            return 'bg-warning'
+        } else if(etapa === 2 ){
+            return 'bg-info';
+        } else if(etapa === 3){
+            return 'bg-info';
+        } else if(etapa === 4){
+            return 'bg-success';
+        }
+    }
+
+    etapaColor(etapa){
+        if(etapa === 1){
+            return '#cc3300';
+        } 
+        else if(etapa ===1.5){
+            return '#ffcc00'
+        }
+        else if(etapa === 2){
+            return '#5bc0de';
+        } else if(etapa === 3){
+            return '#99cc33';
+        } else if(etapa === 4){
+            return '#99cc33';
+        }
+    }
+
+    etapaTexto(etapa){
+        if(etapa ===1){
+            return 'Establecimiento de condiciones';
+        } else if(etapa === 1.5){
+            return 'Aceptación de condiciones';
+        } else if (etapa === 2){
+            return 'Información de retiro';
+        } else if (etapa === 3){
+            return 'Firma del Pagaré';
+        } else if(etapa ===4){
+            return 'Confirmación de retiro';
+        }
     }
 
     render() { 
@@ -112,7 +195,7 @@ class Balance extends Component {
                                         style={{ marginTop: "2em" }}>
                                         <div className="card" style={{width: "18em"}}>
                                             <div className="card-body">
-                                                <p className="card-text text-left">Pagaré #{x._id}</p>
+                                                <p className="card-text text-left" style={{fontWeight:"bold"}}>Pagaré #{x._id}</p>
                                                 <h2 className="card-title">${x.valor}</h2>
                                             </div>
                                                 <ul className="list-group list-group-flush">
@@ -123,7 +206,7 @@ class Balance extends Component {
                                                     <li className="list-group-item"><span  className="text-left font-weight-bold">Fecha de Expiración: </span><span className="text-right">{new Date(x.fechaExpiracion).getDate()}/{new Date(x.fechaExpiracion).getMonth() + 1}/{new Date(x.fechaExpiracion).getFullYear()}</span></li>
                                                 </ul>
                                                 <div className="card-body">
-                                                <Link to = "/pagareDetail"><button className="but-solid">Detalle</button></Link>
+                                                <Link to = "/pagareDetail"><button className="but-solid">Ver en Detalle</button></Link>
                                                 </div>
                                         </div>
                                     </div>
@@ -133,7 +216,27 @@ class Balance extends Component {
                                  );
                                  } else{
                                      return(
-                                         <div key={i}>Incompleto</div>
+                                         <div key={i}>
+                                         <div className="col-lg-4 col-md-2 col-sd-12"></div>
+                                    <div
+                                        className="col-lg-4 col-md-8 col-sd-12"
+                                        style={{ marginTop: "2em" }}>
+                                        <div className="card" style={{width: "18em"}}>
+                                            <div className={`card-body ${this.etapaLevel(x.etapa)}`} >
+                                                <p className="card-text text-left" style={{color:"white"}}>Pagaré #{x._id}</p>
+                                                <h2 className={`card-title`} style={{color:"white"}}>Etapa: {this.etapaTexto(x.etapa)}</h2>
+                                            </div>
+                                                <ul className="list-group list-group-flush">
+                                                <li className="list-group-item"><span  className="text-left font-weight-bold">Deudor: </span><span className="text-right">{x.nombreDeudor}</span></li>
+                                                    <li className="list-group-item"><span  className="text-left font-weight-bold">Cédula del Deudor: </span><span className="text-right">{x.idDeudor}</span></li>
+                                                    {this.renderEtapas(x)}
+                                                </ul>
+                                                <div className="card-body">
+                                                <Link to ={{pathname: '/pagare/crear/', state: {rol: 'acreedor', pagare: x, usuario: {nombre: this.state.nombre, cedula:this.state.cedulaUsuario}}}}><button className={`but-solid ${this.etapaLevel(x.etapa)}`} style={{borderColor:this.etapaColor(x.etapa)}} >Dar siguiente paso</button></Link>
+                                                </div>
+                                        </div>
+                                    </div>
+                                    <div className="col-lg-4 col-md-2 col-sd-12"></div></div>
                                      );
                                  }
                                  
@@ -158,7 +261,7 @@ class Balance extends Component {
                      {this.state.pagaresEnContra.length > 0 ? (
                          <React.Fragment>
                              {this.state.pagaresEnContra.map((x,i) =>{
-                                 if(x.etapa > 4){
+                                 if(x.etapa >= 4){
                                     return(
                                     <div key={i}>
                                     <div className="col-lg-4 col-md-2 col-sd-12"></div>
@@ -167,7 +270,7 @@ class Balance extends Component {
                                         style={{ marginTop: "2em" }}>
                                         <div className="card" style={{width: "18em"}}>
                                             <div className="card-body">
-                                                <p className="card-text text-left">Pagaré #{x._id}</p>
+                                                <p className="card-text text-left" style={{fontWeight:"bold"}}>Pagaré #{x._id}</p>
                                                 <h2 className="card-title">${x.valor}</h2>
                                             </div>
                                                 <ul className="list-group list-group-flush">
@@ -178,7 +281,7 @@ class Balance extends Component {
                                                     <li className="list-group-item"><span  className="text-left font-weight-bold">Fecha de Expiración: </span><span className="text-right">{new Date(x.fechaExpiracion).getDate()}/{new Date(x.fechaExpiracion).getMonth() + 1}/{new Date(x.fechaExpiracion).getFullYear()}</span></li>
                                                 </ul>
                                                 <div className="card-body">
-                                                <Link to = "/pagareDetail"><button className="but-solid">Detalle</button></Link>
+                                                <Link to = "/pagareDetail"><button className="but-solid">Ver en Detalle</button></Link>
                                                 </div>
                                         </div>
                                     </div>
@@ -189,7 +292,26 @@ class Balance extends Component {
                                  }else{
                                      return(
                                          <div key={i}>
-                                             Incompleto
+                                             <div className="col-lg-4 col-md-2 col-sd-12"></div>
+                                    <div
+                                        className="col-lg-4 col-md-8 col-sd-12"
+                                        style={{ marginTop: "2em" }}>
+                                        <div className="card" style={{width: "18em"}}>
+                                            <div className={`card-body ${this.etapaLevel(x.etapa)}`}>
+                                                <p className="card-text text-left" style={{color:"white"}}>Pagaré #{x._id}</p>
+                                                <h2 className={`card-title`} style={{color:"white"}}>Etapa: {this.etapaTexto(x.etapa)}</h2>
+                                            </div>
+                                                <ul className="list-group list-group-flush">
+                                                    <li className="list-group-item"><span  className="text-left font-weight-bold">Acreedor: </span><span className="text-right">{x.nombreAcreedor}</span></li>
+                                                    <li className="list-group-item"><span  className="text-left font-weight-bold">Cédula del Acreedor: </span><span className="text-right">{x.idAcreedor}</span></li>
+                                                    {this.renderEtapas(x)}
+                                                </ul>
+                                                <div className="card-body">
+                                                <Link to = {{pathname: '/pagare/crear/', state: {rol: 'deudor', pagare: x, usuario: {nombre: this.state.nombre, cedula:this.state.cedulaUsuario}}}} ><button className={`but-solid ${this.etapaLevel(x.etapa)}`} style={{borderColor:this.etapaColor(x.etapa)}}>Dar siguiente paso</button></Link>
+                                                </div>
+                                        </div>
+                                    </div>
+                                    <div className="col-lg-4 col-md-2 col-sd-12"></div>
                                          </div>
                                      );
                                  }

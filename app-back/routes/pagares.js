@@ -113,6 +113,8 @@ router.post("/etapa1", (req, res) =>{
         codigoRetiro: "",
         confirmacionRetiro: "",
         hash_transaccion : "",
+        deudorAcepta : false,
+        acreedorAcepta: false,
     };
 
     try {
@@ -145,12 +147,69 @@ router.post("/etapa1", (req, res) =>{
 
 router.patch("/:id/etapa2", (req, res) =>{
 
+
+
     let update = {
-        etapa : 2,
+        etapa : 1.5,
         terminos : req.body.terminos,
         valor : req.body.valor,
-        
+        deudorAcepta : false,
+        acreedorAcepta: false,
+
     };
+    
+    if(req.body.idAceptador === req.body.idDeudor){
+        update.deudorAcepta = true;
+    } else{
+        update.acreedorAcepta = true;
+    }
+
+    try{
+        Connection.connectToMongo()
+        .then(database =>{
+            const client = database.db(db).collection(collection);
+
+            client.findOneAndUpdate(
+                { _id: ObjectId(req.params.id)},
+                { $set : update},
+                {returnOriginal : false},
+                (err, result) =>{
+                    if(err){
+                        res.status(400).json({message : err.message});
+                        return;
+                    }
+                    let data = result.value;
+                    data.etapa = 1.5;
+                    res.status(200).json(result.value);
+                }
+            );
+        })
+        .catch(err =>{
+            res.status(500).json({message : err.message});
+        });
+    }catch(err){
+        res.status(500).json({ErrorConexion: err.message})
+    }
+
+});
+
+/**
+ * Segunda Etapa Aceptar
+ */
+
+router.patch("/:id/etapa2/aceptar", (req, res) =>{
+
+    let update = {
+        etapa : 2,
+        deudorAcepta : req.body.deudorAcepta, 
+        acreedorAcepta : req.body.acreedorAcepta, 
+    };
+
+    if(req.body.idAceptador === req.body.idDeudor){
+        update.deudorAcepta = true;
+    } else{
+        update.acreedorAcepta = true;
+    }
 
     try{
         Connection.connectToMongo()
