@@ -99,7 +99,6 @@ router.patch("/:id/etapa2", (req, res) =>{
         valor : req.body.valor,
         deudorAcepta : false,
         acreedorAcepta: false,
-
     };
 
     if(req.body.idAceptador === req.body.idDeudor){

@@ -12,6 +12,7 @@ const cors = require("cors");
  */
 var usersRouter = require('./routes/users.js');
 var pagaresRouter = require('./routes/pagares.js');
+var endososRouter = require('./routes/endosos.js');
 
 var app = express();
 
@@ -31,6 +32,7 @@ app.use(express.static(path.join(__dirname, 'front/build')));
  */
 app.use('/users', usersRouter);
 app.use('/pagares', pagaresRouter);
+app.use('/endosos', endososRouter);
 
 
 

@@ -99,13 +99,14 @@ class CrearPagare extends Component {
                         idAceptadorNew = pagare.idDeudor;
                     } else if(pagare.acreedorAcepta){
                         idAceptadorNew = pagare.idAcreedor;
-                    }
+                    };
                 }
                 if(rol === 'acreedor'){
                     let vencimiento = new Date();
-                    if(pagare.fechaVencimiento !== null){
-                        vencimiento  = new Date(pagare.fechaVencimiento);
+                    if(pagare.fechaVencimiento !== null && pagare.fechaVencimiento !== ''){
+                        vencimiento = new Date(pagare.fechaVencimiento);
                     }
+                    
                     this.setState({
                         rol: y,
                         etapa: pagare.etapa, 
@@ -129,8 +130,8 @@ class CrearPagare extends Component {
 
                 } else{
                     let vencimiento = new Date();
-                    if(pagare.fechaVencimiento !== null){
-                        vencimiento  = new Date(pagare.fechaVencimiento);
+                    if(pagare.fechaVencimiento !== null && pagare.fechaVencimiento !== ''){
+                        vencimiento = new Date(pagare.fechaVencimiento);
                     }
                     this.setState({
                         rol: y,
@@ -187,25 +188,28 @@ class CrearPagare extends Component {
 
     updatePDF(event){
         event.preventDefault();
+        let creacion = new Date();
+        let dia = creacion.getDate().toString();
+        let mes = creacion.getMonth().toString();
+        let anio = creacion.getFullYear().toString();
         const doc = new jsPDF();
         doc.setFontSize(15);
         doc.text(10,25, `Pagaré No.  ${this.state.id}`);
         doc.setFontSize(12);
         doc.text(10,35, `Yo ${this.state.nombreDeudor} idenficado con la cedula de ciudadanía ${this.state.idDeudor} me obligo a pagar`);
         doc.text(10,42, `solidaria e incondicionalmente a favor de ${this.state.nombreAcreedor} o de quien represente sus derechos`);
-        doc.text(10,49, `o al tenedor legitimo del presente titulo valor en la ciudad de "Ciudad de Creación" la suma de`);
-        doc.text(10,56, `${this.state.valor} pesos moneda corriente el día "Dia" del mes "`)
-        doc.text(10,63, `de "Mes" del "Año".`)
+        doc.text(10,49, `o al tenedor legitimo del presente titulo valor en la ciudad de ${this.state.lugarCreacion} la suma de`);
+        doc.text(10,56, `${this.state.valor} pesos moneda corriente el día ${dia} del mes ${mes} del ${anio}` )
         doc.text(10,70, `Autorizo irrevocablemente a ${this.state.nombreAcreedor} o a quien represente sus derechos`)
         doc.text(10,77, `o al tenedor legítimo del presente título valor para declarar el plazo vencido el presente`)
-        doc.text(10,84, `pagaré y que para tal evento proceda inmediatamente`)
-        doc.text(10,260,`Firma: "Firma del Deudor"`)
+        doc.text(10,84, `pagaré y que para tal evento proceda inmediatamente.`)
+        doc.text(10,260,`Firma: *`)
         doc.text(10,270,`Cedula: ${this.state.idDeudor}`)
         const pdf = doc.output('datauristring');
         this.setState({
             pdf:pdf,
             cambiado:"true",
-        })
+        });
     }
 
     renderPreview(){
@@ -361,7 +365,6 @@ class CrearPagare extends Component {
     
     async handleEtapa1(event) {
         event.preventDefault();
-        console.log(this.state.etapa)
         var data = {
             nombreDeudor: this.state.nombreDeudor,
             idDeudor : this.state.idDeudor,
@@ -393,15 +396,16 @@ class CrearPagare extends Component {
 
     handleEtapa2(event) {
         event.preventDefault();
-        
-        this.setState({idAceptador: this.props.getUsuario().cedula});
+        let aceptador = this.props.getUsuario().cedula === this.state.idDeudor ? this.state.idAcreedor: this.state.idDeudor 
+        this.setState({idAceptador: aceptador});
         var data = {
             valor :this.state.valor,
             terminos : this.state.terminos,
             idAceptador : this.state.idAceptador,
+            idDeudor : this.state.idDeudor,
+            idAcreedor : this.state.idAcreedor,
         }
-        
-        data.idAceptador = this.props.getUsuario().cedula;
+        data.idAceptador = aceptador;
 
 
         axios.patch(
@@ -495,7 +499,6 @@ class CrearPagare extends Component {
         let data = {
             firma : this.state.firma,
         }
-
         axios.patch(
             `/pagares/${this.state.id}/etapa4`,
             data,
@@ -505,9 +508,9 @@ class CrearPagare extends Component {
                 }
             }
         ).then(response =>{
-            //Aquí hacer lo de redirigir
             this.setState({
                 isContrasenia: false,
+                redirect : true,
             });
         })
     }
@@ -648,9 +651,7 @@ class CrearPagare extends Component {
     }
 
     renderEtapa2(){
-        
         if(this.state.etapa === 1 || this.state.etapa ===1.5){
-
             if(this.state.etapa ===1){
                 return(
                     <div id="accordion">
@@ -688,8 +689,8 @@ class CrearPagare extends Component {
             </div>
                 )
             } else{
-                if(this.state.idAceptador === this.props.getUsuario().cedula){
 
+                if(this.state.idAceptador !== this.props.getUsuario().cedula){
                     return(
                 <div id="accordion">
                     <div className="card">
@@ -745,7 +746,7 @@ class CrearPagare extends Component {
                     <h5> Estas son las condiciones propuestas:</h5>
                         <form>
                             <div className="form-group">
-                                <label htmlFor="valor">Valor</label>
+                                <label htmlFor="valor">Valor (en pesos colombianos)</label>
                                 <input name="valor" type="number" min="1"  className="form-control" id="valor" aria-describedby="Valor" placeholder={this.state.valor} disabled={true}/>
                                 <small id="valorHelp" className="form-text text-muted">valor acordado de prestamo</small>
                             </div>
@@ -784,7 +785,7 @@ class CrearPagare extends Component {
                     <div className="col-5 col-md-5 col-lg-5">
                         <form>
                             <div className="form-group">
-                                <label htmlFor="valor">Valor</label>
+                                <label htmlFor="valor">Valor (en pesos colombianos)</label>
                                 <input name="valor" type="number" min="1" onChange={this.handleChangeEtapa2} className="form-control" id="valor" aria-describedby="Valor" placeholder={this.placeholder(1,'valor')} disabled={this.isDisabled(1,'input')}/>
                                 <small id="valorHelp" className="form-text text-muted">valor acordado de prestamo</small>
                             </div>
@@ -855,8 +856,8 @@ class CrearPagare extends Component {
                 <div className="card">
                     <div className="card-header" id="etapa3">
                         <div className="col-md-10">
-                            <button className={`btn ${this.state.etapa === 2 ? 'btn-warning': 'btn-success'}`} data-toggle="collapse" data-target="#etapa3Collapse" aria-expanded={this.isDisabled(2,'aria')} aria-controls="etapa3Collapse" >
-                                <h5 className={`title-card-success`}>Acuerdo de Retiro</h5>
+                            <button className={`btn ${this.state.etapa < 2 ? '': this.state.etapa === 2 ? 'btn-warning': 'btn-success'}`} data-toggle="collapse" data-target="#etapa3Collapse" aria-expanded={this.isDisabled(2,'aria')} aria-controls="etapa3Collapse" disabled={this.state.etapa < 2 ? true : false }>
+                                <h5 className={`title-card-${this.state.etapa < 2 ? 'ongoing' : 'success'}`}>Acuerdo de Retiro</h5>
                             </button>
                         </div>
                     </div>
@@ -865,7 +866,7 @@ class CrearPagare extends Component {
                     <div className="row">
                     <div className="col-1 col-md-1 col-lg-1"></div>
                     <div className="col-5 col-md-5 col-lg-5">
-                    {this.state.etapa === 2 
+                    {this.state.etapa < 3 
                     ? <h3 className="text-left font-weight-bold">Esperando código de retiro del acreedor</h3>
                     :
                     <form>
@@ -961,7 +962,6 @@ class CrearPagare extends Component {
     render() { 
         return (
         <div className="content-body host">
-        {this.state.etapa}
         {this.redirect()}
         <div className="row">
             <div className="col-md-6 col-6 col-lg-6">

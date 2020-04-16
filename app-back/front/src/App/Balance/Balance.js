@@ -54,11 +54,17 @@ class Balance extends Component {
                 let totalEnContra = 0;
 
                 datosAFavor.map((x)=>{
+                    if(x.valor === -1){
+                        x.valor =0;
+                    }
                     totalAFavor = x.valor + totalAFavor;
                     return totalAFavor;
                 });
 
                 datosEnContra.map((x)=>{
+                    if(x.valor === -1){
+                        x.valor =0;
+                    }
                     totalEnContra = x.valor + totalEnContra;
                     return totalEnContra;
                 });
@@ -188,7 +194,7 @@ class Balance extends Component {
                                                     <li className="list-group-item"><span  className="text-left font-weight-bold">Fecha de Expiración: </span><span className="text-right">{new Date(x.fechaExpiracion).getDate()}/{new Date(x.fechaExpiracion).getMonth() + 1}/{new Date(x.fechaExpiracion).getFullYear()}</span></li>
                                                 </ul>
                                                 <div className="card-body">
-                                                <Link to = "/pagareDetail"><button className="but-solid">Ver en Detalle</button></Link>
+                                                <Link to = {{pathname: '/pagareDetail', state: {rol: 'acreedor', pagare: x, usuario: {nombre: this.state.nombre, cedula:this.state.cedulaUsuario}}}} ><button className={`but-solid`}>Ver en Detalle</button></Link>
                                                 </div>
                                         </div>
                                     </div>
@@ -263,7 +269,7 @@ class Balance extends Component {
                                                     <li className="list-group-item"><span  className="text-left font-weight-bold">Fecha de Expiración: </span><span className="text-right">{new Date(x.fechaExpiracion).getDate()}/{new Date(x.fechaExpiracion).getMonth() + 1}/{new Date(x.fechaExpiracion).getFullYear()}</span></li>
                                                 </ul>
                                                 <div className="card-body">
-                                                <Link to = "/pagareDetail"><button className="but-solid">Ver en Detalle</button></Link>
+                                                <Link to = {{pathname: '/pagareDetail/', state: {pagare: x, }}} ><button className={`but-solid`} >Ver en Detalle</button></Link>
                                                 </div>
                                         </div>
                                     </div>
@@ -332,7 +338,7 @@ class Balance extends Component {
                 <div className="col-lg-8 col-8 col-md-8">
                     <nav aria-label="breadcrumb">
                         <ol className="breadcrumb">
-                            <li className="breadcrumb-item active" aria-current="page"><h5 className="contra">Total en Contra:  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${this.state.totalDeuda}</h5></li>
+                            <li className="breadcrumb-item active" aria-current="page"><h5 className="contra">Total en Contra:  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${this.state.totalDeuda< 0 ? 0: this.state.totalDeuda }</h5></li>
                         </ol>
                     </nav>
                 </div>
