@@ -2,10 +2,16 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import {Redirect} from 'react-router-dom';
 import jsPDF from 'jspdf';
+import DatePicker from 'react-datepicker';
+import {registerLocale} from 'react-datepicker';
+import es from 'date-fns/locale/es'
+import crypto from 'crypto';
 
 
+import "react-datepicker/dist/react-datepicker.css";
 import './CrearPagare.css';
 
+registerLocale('es', es)
 
 class CrearPagare extends Component {
     constructor(props) {
@@ -17,10 +23,10 @@ class CrearPagare extends Component {
             idDeudor : 0,
             nombreAcreedor: "",
             idAcreedor : 0,
-            fechaCreacion: null,
+            fechaCreacion: new Date(),
             lugarCreacion : "",
-            fechaVencimiento : null,
-            fechaExpiracion : null,
+            fechaVencimiento : new Date(),
+            fechaExpiracion : new Date(),
             etapa : 0,
             terminos : "",
             codigoRetiro: "",
@@ -32,6 +38,10 @@ class CrearPagare extends Component {
             disableDeudor : false,
             idAceptador : 0,
             cambiado : "false",
+            isContrasenia : false,
+            contrasenia : '',
+            firma : '',
+            isSame : false,
          }
 
          this.redirect = this.redirect.bind(this);
@@ -40,12 +50,18 @@ class CrearPagare extends Component {
          this.handleChangeEtapa2 = this.handleChangeEtapa2.bind(this);
          this.handleEtapa2 = this.handleEtapa2.bind(this);
          this.handleEtapa2Aceptar = this.handleEtapa2Aceptar.bind(this);
+         this.handleChangeEtapa3 = this.handleChangeEtapa3.bind(this);
+         this.handleEtapa3 = this.handleEtapa3.bind(this);
+         this.handleChangeDate = this.handleChangeDate.bind(this);
+         this.handleChangeContrasenia = this.handleChangeContrasenia.bind(this);
+         this.handleEtapa4 = this.handleEtapa4.bind(this);
          this.isDisabled = this.isDisabled.bind(this);
          this.isSuccessful = this.isSuccessful.bind(this);
          this.renderPreview = this.renderPreview.bind(this);
          this.placeholder = this.placeholder.bind(this);
          this.renderEtapa2 = this.renderEtapa2.bind(this);
          this.renderEtapa3 = this.renderEtapa3.bind(this);
+         this.renderEtapa4 = this.renderEtapa4.bind(this);
          this.updatePDF = this.updatePDF.bind(this);
     }
 
@@ -86,6 +102,10 @@ class CrearPagare extends Component {
                     }
                 }
                 if(rol === 'acreedor'){
+                    let vencimiento = new Date();
+                    if(pagare.fechaVencimiento !== null){
+                        vencimiento  = new Date(pagare.fechaVencimiento);
+                    }
                     this.setState({
                         rol: y,
                         etapa: pagare.etapa, 
@@ -98,7 +118,7 @@ class CrearPagare extends Component {
                         confirmacionRetiro: pagare.confirmacionRetiro,
                         fechaCreacion : pagare.fechaCreacion,
                         fechaExpiracion : pagare.fechaExpiracion,
-                        fechaVencimiento : pagare.fechaVencimiento,
+                        fechaVencimiento : vencimiento,
                         firma: pagare.firma,
                         idDeudor: pagare.idDeudor,
                         nombreDeudor: pagare.nombreDeudor,
@@ -108,6 +128,10 @@ class CrearPagare extends Component {
                     });
 
                 } else{
+                    let vencimiento = new Date();
+                    if(pagare.fechaVencimiento !== null){
+                        vencimiento  = new Date(pagare.fechaVencimiento);
+                    }
                     this.setState({
                         rol: y,
                         etapa: pagare.etapa, 
@@ -120,7 +144,7 @@ class CrearPagare extends Component {
                         confirmacionRetiro: pagare.confirmacionRetiro,
                         fechaCreacion : pagare.fechaCreacion,
                         fechaExpiracion : pagare.fechaExpiracion,
-                        fechaVencimiento : pagare.fechaVencimiento,
+                        fechaVencimiento : vencimiento,
                         firma: pagare.firma,
                         idAcreedor : pagare.idAcreedor,
                         nombreAcreedor : pagare.nombreAcreedor,
@@ -141,7 +165,6 @@ class CrearPagare extends Component {
 
     setup(){
         const doc = new jsPDF();
-        doc.setFont('arial')
         doc.setFontSize(15);
         doc.text(10,25, `Pagaré No. "Numero de pagaré"`);
         doc.setFontSize(12);
@@ -165,7 +188,6 @@ class CrearPagare extends Component {
     updatePDF(event){
         event.preventDefault();
         const doc = new jsPDF();
-        doc.setFont('arial')
         doc.setFontSize(15);
         doc.text(10,25, `Pagaré No.  ${this.state.id}`);
         doc.setFontSize(12);
@@ -249,7 +271,7 @@ class CrearPagare extends Component {
         }
     }
 
-    handleChangeEtapa1(event){
+    async handleChangeEtapa1(event){
         event.preventDefault();
         let target = event.target;
         let  value = target.value;
@@ -258,9 +280,20 @@ class CrearPagare extends Component {
             value = parseInt(value,10);
         }
         
-        this.setState({
+        await this.setState({
             [name]: value,
         });
+
+        if(this.state.idAcreedor === this.state.idDeudor){
+            this.setState({
+                isSame : true,
+            });
+        }else{
+            this.setState({
+                isSame : false,
+            });
+        }
+
 
     }
 
@@ -276,9 +309,59 @@ class CrearPagare extends Component {
             [name]: value,
         });
     }
-    
-    handleEtapa1(event) {
+
+    handleChangeEtapa3(event){
         event.preventDefault();
+        let target = event.target;
+        let  value = target.value;
+        let name = target.name;
+        this.setState({
+            [name]: value,
+        });
+    }
+
+    handleChangeDate(date) {
+        this.setState({
+            fechaVencimiento : date,
+        })
+    }
+    
+    async handleChangeContrasenia(event){
+        event.preventDefault();
+        let {usuario} = this.props.location.state;
+        this.setState({
+            contrasenia : event.target.value,
+        });
+        await axios.post(
+            '/users/login',
+            {
+                "cedula": usuario.cedula ,
+                "contrasenia": event.target.value,
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        ).then(response => {
+            
+            if (response.data.success) {
+                this.setState({
+                    isContrasenia : true,
+                });
+            } else{
+                this.setState({
+                    isContrasenia : false,
+                });
+            }
+
+        }).catch(err => {
+        })
+    }
+    
+    async handleEtapa1(event) {
+        event.preventDefault();
+        console.log(this.state.etapa)
         var data = {
             nombreDeudor: this.state.nombreDeudor,
             idDeudor : this.state.idDeudor,
@@ -286,7 +369,7 @@ class CrearPagare extends Component {
             idAcreedor : this.state.idAcreedor,
         }
         
-        axios.post(
+        await axios.post(
             '/pagares/etapa1',
             data,
             {
@@ -295,7 +378,7 @@ class CrearPagare extends Component {
                 }
             }
         ).then(response =>{
-            let pagare = response.data[0];
+            let pagare = response.data;
                 this.setState({
                     id:pagare._id,
                     etapa : pagare.etapa,
@@ -304,6 +387,7 @@ class CrearPagare extends Component {
                 });
                 
         });
+        
     }
 
 
@@ -367,8 +451,68 @@ class CrearPagare extends Component {
 
     }
 
-    isDisabled(pEtapa,element){
+    handleEtapa3(event) {
+        event.preventDefault();
+        const vencimiento = this.state.fechaVencimiento;
+        const vencimientoString = `${vencimiento.getDate()}-${vencimiento.getMonth() +1}-${vencimiento.getFullYear()}`
+        var data = {
+            lugarCreacion :this.state.lugarCreacion,
+            fechaVencimiento : vencimientoString,
+            codigoRetiro : this.state.codigoRetiro,
+        }
         
+        axios.patch(
+            `/pagares/${this.state.id}/etapa3/`,
+            data,
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        ).then(response =>{
+            let pagare = response.data;
+            
+            this.setState({etapa: pagare.etapa})
+                
+        });
+
+    }
+
+
+    async handleEtapa4(event){
+        event.preventDefault();
+        let pagare = this.state.id;
+        let contra = this.state.contrasenia;
+        let {usuario} = this.props.location.state;
+        let cedula = usuario.cedula;
+        const hmac = crypto.createHmac('md5',contra)
+        hmac.update(`${pagare}${cedula}`);
+        let firmaTemp = hmac.digest('hex');
+        await this.setState({
+            firma : firmaTemp,
+        });
+
+        let data = {
+            firma : this.state.firma,
+        }
+
+        axios.patch(
+            `/pagares/${this.state.id}/etapa4`,
+            data,
+            {
+                headers: {
+                    'Content-Type':'application/json'
+                }
+            }
+        ).then(response =>{
+            //Aquí hacer lo de redirigir
+            this.setState({
+                isContrasenia: false,
+            });
+        })
+    }
+
+    isDisabled(pEtapa,element){
         if(element === 'card'){
             
             if(pEtapa === this.state.etapa){
@@ -478,6 +622,27 @@ class CrearPagare extends Component {
                 return `${this.state.terminos}`;
             } else{
                 return 'Condiciones del prestamo'
+            }
+        }
+        if(input === 'lugarCreacion'){
+            if(pEtapa > 3){
+                return `${this.state.lugarCreacion}`
+            } else{
+                return 'Ciudad de Creación Ej: Bogotá'
+            }
+        }
+        if(input === 'fechaVencimiento'){
+            if(pEtapa > 3){
+                return `${this.state.fechaVencimiento}`
+            } else{
+                return 'Fecha en la que se espera el pago';
+            }
+        }
+        if(input === 'codigoRetiro'){
+            if(pEtapa > 3){
+                return `${this.state.codigoRetiro}`
+            } else{
+                return 'Código de retiro'
             }
         }
     }
@@ -647,7 +812,7 @@ class CrearPagare extends Component {
                 <div className="card">
                     <div className="card-header" id="etapa3">
                         <div className="col-md-10">
-                            <button className={`btn ${this.isSuccessful(2,'card')}  ${this.isDisabled(2,'card')}`} data-toggle="collapse" data-target="#etapa2Collapse" aria-expanded={this.isDisabled(2,'aria')} aria-controls="etapa2Collapse" disabled={this.isDisabled(2,'button')} >
+                            <button className={`btn ${this.isSuccessful(2,'card')}  ${this.isDisabled(2,'card')}`} data-toggle="collapse" data-target="#etapa3Collapse" aria-expanded={this.isDisabled(2,'aria')} aria-controls="etapa3Collapse" disabled={this.isDisabled(2,'button')} >
                                 <h5 className={`title-card${this.isSuccessful(2,'title')}`}>Acuerdo de Retiro</h5>
                             </button>
                         </div>
@@ -657,18 +822,25 @@ class CrearPagare extends Component {
                     <div className="row">
                     <div className="col-1 col-md-1 col-lg-1"></div>
                     <div className="col-5 col-md-5 col-lg-5">
+                    {this.state.etapa < 2 
+                        ? <h3 className="text-left font-weight-bold">Esperando código de retiro del acreedor</h3>
+                        :
                         <form>
                             <div className="form-group">
-                                <label htmlFor="valor">Valor</label>
-                                <input name="valor" type="number" min="1" onChange={this.handleChangeEtapa2} className="form-control" id="valor" aria-describedby="Valor" placeholder={this.placeholder(2,'valor')} disabled={this.isDisabled(2,'input')}/>
-                                <small id="valorHelp" className="form-text text-muted">valor acordado de prestamo</small>
+                                <label htmlFor="lugarCreacion">Lugar de Creación</label>
+                                <input name="lugarCreacion" type="text" onChange={this.handleChangeEtapa3} className="form-control" id="lugarCreacion" placeholder={this.placeholder(2,'lugarCreacion')} disabled={this.isDisabled(2,'input')}/>
                             </div>
                             <div className="form-group">
-                                <label htmlFor="Condiciones">Condiciones</label>
-                                <input name="terminos" type="text" onChange={this.handleChangeEtapa2} className="form-control" id="terminos" placeholder="algo" disabled={this.isDisabled(2,'input')}/>
+                                <label htmlFor="fechaVencimiento">Fecha de Vencimiento</label>
+                                <DatePicker id="fechaVencimiento" name="fechaVencimiento" locale="es" selected={this.state.fechaVencimiento} onChange={this.handleChangeDate} disabled={this.isDisabled(2,'input')} dateFormat='dd/MM/yyyy' />
                             </div>
-                                <button name="proponer" type="submit" className="btn btn-primary" onClick={this.handleEtapa2} style={{visibility:this.isDisabled(1,'submit')}} >Siguiente Paso</button>
+                            <div className="form-group">
+                                    <label htmlFor="codigoRetiro">Código de retiro</label>
+                                    <input name="codigoRetiro" type="text" onChange={this.handleChangeEtapa3} className="form-control" id="codigoRetiro" placeholder={this.placeholder(2,'codigoRetiro')} disabled={this.isDisabled(2,'input')}/>
+                                </div>
+                                <button name="proponerRetiro" type="submit" className="btn btn-primary" onClick={this.handleEtapa3} style={{visibility:this.isDisabled(2,'submit')}} >Siguiente Paso</button>
                         </form>
+                    }
                      </div>
                      <div className="col-6 col-md-6 col-lg-6"></div>
                     </div>
@@ -678,18 +850,59 @@ class CrearPagare extends Component {
             </div>
             );
         } else{
-            
+            return (
+                <div id="accordion">
+                <div className="card">
+                    <div className="card-header" id="etapa3">
+                        <div className="col-md-10">
+                            <button className={`btn ${this.state.etapa === 2 ? 'btn-warning': 'btn-success'}`} data-toggle="collapse" data-target="#etapa3Collapse" aria-expanded={this.isDisabled(2,'aria')} aria-controls="etapa3Collapse" >
+                                <h5 className={`title-card-success`}>Acuerdo de Retiro</h5>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="etapa3Collapse" className={`collapse ${this.isDisabled(2,'accordion')}`} aria-labelledby="etapa3" data-parent="#accordion">
+                    <div className="row">
+                    <div className="col-1 col-md-1 col-lg-1"></div>
+                    <div className="col-5 col-md-5 col-lg-5">
+                    {this.state.etapa === 2 
+                    ? <h3 className="text-left font-weight-bold">Esperando código de retiro del acreedor</h3>
+                    :
+                    <form>
+                        <div className="form-group">
+                            <label htmlFor="lugarCreacion">Lugar de Creación</label>
+                            <input name="lugarCreacion" type="text" onChange={this.handleChangeEtapa3} className="form-control" id="lugarCreacion" placeholder={this.placeholder(2,'lugarCreacion')} disabled={this.isDisabled(2,'input')}/>
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="fechaVencimiento">Fecha de Vencimiento</label>
+                            <DatePicker id="fechaVencimiento" name="fechaVencimiento" locale="es" selected={this.state.fechaVencimiento} onChange={this.handleChangeDate} disabled={this.isDisabled(2,'input')} dateFormat='dd/MM/yyyy' />
+                        </div>
+                        <div className="form-group">
+                        <label>Código de retiro</label>
+                        <h5 className="text-center">Cuando Firmes obtendras el código para retirar el dinero</h5>
+                        </div>
+                            <button name="proponerRetiro" type="submit" className="btn btn-primary" onClick={this.handleEtapa3} style={{visibility:this.isDisabled(2,'submit')}} >Siguiente Paso</button>
+                    </form>
+                    }      
+                    </div>
+                    <div className="col-6 col-md-6 col-lg-6"></div>
+                    </div>
+                    <div className="row">&nbsp;</div>
+                    </div>
+                </div>
+            </div>
+            );
         }
     }
     
     renderEtapa4(){
-        if(this.state.Deudor === this.props.getUsuario().cedula){
+        if(this.state.idDeudor === this.props.getUsuario().cedula){
             return (
                 <div id="accordion">
                 <div className="card">
                     <div className="card-header" id="etapa4">
                         <div className="col-md-10">
-                            <button className={`btn ${this.isSuccessful(3,'card')}  ${this.isDisabled(3,'card')}`} data-toggle="collapse" data-target="#etapa2Collapse" aria-expanded={this.isDisabled(3,'aria')} aria-controls="etapa2Collapse" disabled={this.isDisabled(3,'button')} >
+                            <button className={`btn ${this.isSuccessful(3,'card')}  ${this.isDisabled(3,'card')}`} data-toggle="collapse" data-target="#etapa4Collapse" aria-expanded={this.isDisabled(3,'aria')} aria-controls="etapa4Collapse" disabled={this.isDisabled(3,'button')} >
                                 <h5 className={`title-card${this.isSuccessful(3,'title')}`}>Firma</h5>
                             </button>
                         </div>
@@ -699,17 +912,14 @@ class CrearPagare extends Component {
                     <div className="row">
                     <div className="col-1 col-md-1 col-lg-1"></div>
                     <div className="col-5 col-md-5 col-lg-5">
+                        <p>&nbsp;</p>
+                        <p className="text-center font-weight-bold">Antes de Firmar por favor revisa la previsualización del pagaré.</p>
                         <form>
                             <div className="form-group">
-                                <label htmlFor="valor">Valor</label>
-                                <input name="valor" type="number" min="1" onChange={this.handleChangeEtapa2} className="form-control" id="valor" aria-describedby="Valor" placeholder={this.placeholder(3,'valor')} disabled={this.isDisabled(3,'input')}/>
-                                <small id="valorHelp" className="form-text text-muted">valor acordado de prestamo</small>
+                                <label htmlFor="contrasenia">Digite su contraseña para poder firmar:</label>
+                                <input name="contrasenia" type="password" onChange={this.handleChangeContrasenia} className="form-control" id="contrasenia" placeholder="Contrasenia" disabled={this.isDisabled(3,'input')}/>
                             </div>
-                            <div className="form-group">
-                                <label htmlFor="Condiciones">Condiciones</label>
-                                <input name="terminos" type="text" onChange={this.handleChangeEtapa2} className="form-control" id="terminos" placeholder="algo" disabled={this.isDisabled(3,'input')}/>
-                            </div>
-                                <button name="proponer" type="submit" className="btn btn-primary" onClick={this.handleEtapa2} style={{visibility:this.isDisabled(1,'submit')}} >Siguiente Paso</button>
+                                <button name="firmar" type="submit" className="btn btn-success" onClick={this.handleEtapa4} disabled={!this.state.isContrasenia} >Siguiente Paso</button>
                         </form>
                      </div>
                      <div className="col-6 col-md-6 col-lg-6"></div>
@@ -725,33 +935,23 @@ class CrearPagare extends Component {
                 <div className="card">
                     <div className="card-header" id="etapa4">
                         <div className="col-md-10">
-                            <button className={`btn ${this.isSuccessful(3,'card')}  ${this.isDisabled(3,'card')}`} data-toggle="collapse" data-target="#etapa2Collapse" aria-expanded={this.isDisabled(3,'aria')} aria-controls="etapa2Collapse" disabled={this.isDisabled(3,'button')} >
-                                <h5 className={`title-card${this.isSuccessful(3,'title')}`}>Firma</h5>
+                            <button className={`btn ${this.state.etapa === 3? 'btn-warning': ''}  ${this.isDisabled(3,'card')}`} data-toggle="collapse" data-target="#etapa4Collapse" aria-expanded={this.isDisabled(3,'aria')} aria-controls="etapa4Collapse" disabled={this.isDisabled(3,'button')}>
+                                <h5 className={`title-card-${this.state.etapa === 3? 'success': 'ongoing'}`}>Firma</h5>
                             </button>
                         </div>
                     </div>
 
                     <div id="etapa4Collapse" className={`collapse ${this.isDisabled(3,'accordion')}`} aria-labelledby="etapa4" data-parent="#accordion">
-                    <div className="row">
-                    <div className="col-1 col-md-1 col-lg-1"></div>
-                    <div className="col-5 col-md-5 col-lg-5">
-                        <form>
-                            <div className="form-group">
-                                <label htmlFor="valor">Valor</label>
-                                <input name="valor" type="number" min="1" onChange={this.handleChangeEtapa2} className="form-control" id="valor" aria-describedby="Valor" placeholder={this.placeholder(3,'valor')} disabled={this.isDisabled(3,'input')}/>
-                                <small id="valorHelp" className="form-text text-muted">valor acordado de prestamo</small>
+                        <div className="row">
+                            <div className="col-1 col-md-1 col-lg-1"></div>
+                            <div className="col-5 col-md-5 col-lg-5">
+                                <p>&nbsp;</p>
+                                <h3 className="text-left font-weight-bold">Esperando la firma del deudor</h3>
                             </div>
-                            <div className="form-group">
-                                <label htmlFor="Condiciones">Condiciones</label>
-                                <input name="terminos" type="text" onChange={this.handleChangeEtapa2} className="form-control" id="terminos" placeholder="algo" disabled={this.isDisabled(3,'input')}/>
-                            </div>
-                                <button name="proponer" type="submit" className="btn btn-primary" onClick={this.handleEtapa2} style={{visibility:this.isDisabled(1,'submit')}} >Siguiente Paso</button>
-                        </form>
-                     </div>
-                     <div className="col-6 col-md-6 col-lg-6"></div>
-                    </div>
+                            <div className="col-6 col-md-6 col-lg-6"></div>
+                        </div>
                     <div className="row">&nbsp;</div>
-                    </div>
+                </div>
                 </div>
             </div>
             )
@@ -761,6 +961,7 @@ class CrearPagare extends Component {
     render() { 
         return (
         <div className="content-body host">
+        {this.state.etapa}
         {this.redirect()}
         <div className="row">
             <div className="col-md-6 col-6 col-lg-6">
@@ -818,7 +1019,7 @@ class CrearPagare extends Component {
                         <div className="row">
                         <div className="col-3 col-md-3 col-lg-5"></div>
                         <div className="col-6 col-md-6 col-lg-6">
-                            <button type="submit" className="btn btn-primary" onClick={this.handleEtapa1} style={{visibility:this.isDisabled(0,'submit')}} >Siguiente Paso</button>
+                            <button type="submit" className="btn btn-primary" onClick={this.handleEtapa1} style={{visibility:this.isDisabled(0,'submit')}} disabled={this.state.isSame}>Siguiente Paso</button>
                         </div>  
                             <div className="col-1 col-md-1 col-lg-1"></div>
                         </div>                      
@@ -833,6 +1034,9 @@ class CrearPagare extends Component {
             {this.renderEtapa2()}
             <div className="row">&nbsp;</div>
             {this.renderEtapa3()}
+            <div className="row">&nbsp;</div>
+            {this.renderEtapa4()}
+            <div className="row">&nbsp;</div>
         </div>
         <div className="col-md-6 col-lg-6 col-6">{this.renderPreview()}</div>
         </div>

@@ -88,23 +88,11 @@ class Balance extends Component {
                 <div>
                     <li className="list-group-item"><span  className="text-left font-weight-bold">Valor: </span><span className="text-right">{pagare.valor}</span></li>
                     <li className="list-group-item"><span  className="text-left font-weight-bold">Creado en: </span><span className="text-right">{pagare.lugarCreacion}</span></li>
-                    <li className="list-group-item"><span  className="text-left font-weight-bold">Fecha de vencimiento: </span><span className="text-right">{new Date(pagare.fechaVencimiento).getDate()}/{new Date(pagare.fechaVencimiento).getMonth() + 1}/{new Date(pagare.fechaVencimiento).getFullYear()}}</span></li>
+                    <li className="list-group-item"><span  className="text-left font-weight-bold">Fecha de vencimiento: </span><span className="text-right">{new Date(pagare.fechaVencimiento).getDate()}/{new Date(pagare.fechaVencimiento).getMonth() + 1}/{new Date(pagare.fechaVencimiento).getFullYear()}</span></li>
 
                 </div>  
             )
-        } else if(etapa ===4){
-            return(
-                <div>
-                    <li className="list-group-item"><span  className="text-left font-weight-bold">Valor: </span><span className="text-right">{pagare.valor}</span></li>
-                    <li className="list-group-item"><span  className="text-left font-weight-bold">Creado en: </span><span className="text-right">{pagare.lugarCreacion}</span></li>
-                    <li className="list-group-item"><span  className="text-left font-weight-bold">Fecha de vencimiento: </span><span className="text-right">{new Date(pagare.fechaVencimiento).getDate()}/{new Date(pagare.fechaVencimiento).getMonth() + 1}/{new Date(pagare.fechaVencimiento).getFullYear()}}</span></li>
-                    <li className="list-group-item"><span  className="text-left font-weight-bold">Fecha de Expiración: </span><span className="text-right">{new Date(pagare.fechaExpiracion).getDate()}/{new Date(pagare.fechaExpiracion).getMonth() + 1}/{new Date(pagare.fechaExpiracion).getFullYear()}}</span></li>
-                    <li className="list-group-item"><span  className="text-left font-weight-bold">Valor: </span><span className="text-right">{pagare.valor}</span></li>
-                    <li className="list-group-item"><span  className="text-left font-weight-bold">Creado en: </span><span className="text-right">{pagare.lugarCreacion}</span></li>
-                    <li className="list-group-item"><span  className="text-left font-weight-bold">Firma: </span><span className="text-right etapa4">Firmado</span></li>
-                </div>  
-            )
-        }
+        } 
         
     }
 
@@ -117,10 +105,8 @@ class Balance extends Component {
         } else if(etapa === 2 ){
             return 'bg-info';
         } else if(etapa === 3){
-            return 'bg-info';
-        } else if(etapa === 4){
             return 'bg-success';
-        }
+        } 
     }
 
     etapaColor(etapa){
@@ -134,8 +120,6 @@ class Balance extends Component {
             return '#5bc0de';
         } else if(etapa === 3){
             return '#99cc33';
-        } else if(etapa === 4){
-            return '#99cc33';
         }
     }
 
@@ -148,9 +132,7 @@ class Balance extends Component {
             return 'Información de retiro';
         } else if (etapa === 3){
             return 'Firma del Pagaré';
-        } else if(etapa ===4){
-            return 'Confirmación de retiro';
-        }
+        } 
     }
 
     render() { 
@@ -186,7 +168,7 @@ class Balance extends Component {
                      {this.state.pagaresAfavor.length > 0 ? (
                          <React.Fragment>
                              {this.state.pagaresAfavor.map((x,i) =>{
-                                 if(x.etapa >4){
+                                 if(x.etapa >3){
                                     return(
                                     <div key={i}>
                                     <div className="col-lg-4 col-md-2 col-sd-12"></div>

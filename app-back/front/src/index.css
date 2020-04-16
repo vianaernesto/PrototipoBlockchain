@@ -59,7 +59,7 @@ body {
   color: white !important;
   background-image: none;
   border: 2px solid transparent;
-  border-color: #418AF2 !important;
+  border-color: #418AF2;
 }
 .but-solid:hover, .but-solid:focus {
   text-decoration: none;

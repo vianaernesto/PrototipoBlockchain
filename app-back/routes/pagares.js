@@ -1,11 +1,10 @@
 var express = require('express');
 var router = express.Router();
-const ObjectId =require("mongodb").ObjectID;
-const {Connection} = require("../db/Mongolib");
 const axios = require('axios');
 
-const db = "prototipo";
-const collection = "pagares"
+
+const ip = 'http://127.0.0.1';
+const port = '5000';
 
 /**
  *  GET Info Pagaré
@@ -13,23 +12,14 @@ const collection = "pagares"
 
 router.get("/:id", (req,res) =>{
 
-    try{
-        Connection.connectToMongo()
-            .then(database => {
-                const client = database.db(db).collection(collection);
+    axios.get(`${ip}:${port}/pagares/${req.params.id}`)
+        .then(response =>{
+            res.status(200).json(response.data);
+        })
+        .catch(err =>{
+            res.status(404).json({message: err.message});
+        });
 
-                client
-                    .find({_id: ObjectId(req.params.id)})
-                    .toArray()
-                    .then(x => res.status(200).json(x))
-                    .catch(err => res.status(404).json({message: err.message}));
-            })
-            .catch(err =>{
-                res.status(500).json({message:err.message});
-            });
-    }catch(err){
-        res.status(500).json({message: err.message});
-    }
 });
 
 /**
@@ -38,23 +28,14 @@ router.get("/:id", (req,res) =>{
  */
 router.get("/acreedor/:id", (req,res) =>{
 
-    try{
-        Connection.connectToMongo()
-            .then(database => {
-                const client = database.db(db).collection(collection);
-
-                client
-                    .find({idAcreedor:parseInt(req.params.id)})
-                    .toArray()
-                    .then(x => res.status(200).json(x))
-                    .catch(err => res.status(404).json({message: err.message}));
-            })
-            .catch(err =>{
-                res.status(500).json({message:err.message});
-            });
-    }catch(err){
-        res.status(500).json({message: err.message});
-    }
+    axios.get(`${ip}:${port}/pagares/acreedor/${req.params.id}`)
+    .then(response =>{
+        res.status(200).json(response.data);
+    })
+    .catch(err =>{
+        res.status(404).json({message: err.message});
+    });
+    
 });
 
 
@@ -67,26 +48,13 @@ router.get("/acreedor/:id", (req,res) =>{
 
 router.get("/deudor/:id", (req,res) =>{
 
-    try{
-        Connection.connectToMongo()
-            .then(database => {
-                const client = database.db(db).collection(collection);
-                client
-                    .find({idDeudor :parseInt(req.params.id)})
-                    .toArray()
-                    .then(x =>
-                        {
-                            
-                            res.status(200).json(x)
-                        } )
-                    .catch(err => res.status(404).json({message: err.message}));
-            })
-            .catch(err =>{
-                res.status(500).json({message:err.message});
-            });
-    }catch(err){
-        res.status(500).json({message: err.message});
-    }
+    axios.get(`${ip}:${port}/pagares/deudor/${req.params.id}`)
+    .then(response =>{
+        res.status(200).json(response.data);
+    })
+    .catch(err =>{
+        res.status(404).json({message: err.message});
+    });
 });
 
 /**
@@ -95,48 +63,26 @@ router.get("/deudor/:id", (req,res) =>{
 
 router.post("/etapa1", (req, res) =>{
     const newPagare = {
-        valor : -1,
         nombreDeudor: req.body.nombreDeudor,
         idDeudor : req.body.idDeudor,
         nombreAcreedor: req.body.nombreAcreedor,
         idAcreedor : req.body.idAcreedor,
-        fechaCreacion: null,
-        lugarCreacion : "",
-        fechaVencimiento : null,
-        fechaExpiracion : null,
-        lugarCumplimiento : "",
-        firma : null,
-        ultimoEndoso : null,
-        pendiente: true,
-        etapa : 1,
-        terminos : "",
-        codigoRetiro: "",
-        confirmacionRetiro: "",
-        hash_transaccion : "",
-        deudorAcepta : false,
-        acreedorAcepta: false,
     };
 
-    try {
-        Connection.connectToMongo()
-            .then(database =>{
-                const client = database.db(db).collection(collection);
-
-                client.insertOne(newPagare, (err, result) =>{
-                    if(err){
-                        res.status(400).json({message: err.message});
-                        return;
-                    }
-                    res.status(201).send(result.ops);
-                });
-            })
-            .catch(err =>{
-                res.status(500).json({message :err.message});
-            });
-
-    }catch(err){
-        res.status(500).json({message: err.message});
-    }
+    axios.post(
+        `${ip}:${port}/pagares/etapa1`,
+         newPagare,
+         {
+            headers: {
+                'Content-Type': 'application/json'
+                }
+            }
+        ).then(response =>{
+            res.status(201).send(response.data);
+        })
+        .catch(err => {
+            res.status(500).json({message: err.message});
+        });
 
 });
 
@@ -147,8 +93,6 @@ router.post("/etapa1", (req, res) =>{
 
 router.patch("/:id/etapa2", (req, res) =>{
 
-
-
     let update = {
         etapa : 1.5,
         terminos : req.body.terminos,
@@ -157,39 +101,30 @@ router.patch("/:id/etapa2", (req, res) =>{
         acreedorAcepta: false,
 
     };
-    
+
     if(req.body.idAceptador === req.body.idDeudor){
         update.deudorAcepta = true;
     } else{
         update.acreedorAcepta = true;
     }
+    
 
-    try{
-        Connection.connectToMongo()
-        .then(database =>{
-            const client = database.db(db).collection(collection);
-
-            client.findOneAndUpdate(
-                { _id: ObjectId(req.params.id)},
-                { $set : update},
-                {returnOriginal : false},
-                (err, result) =>{
-                    if(err){
-                        res.status(400).json({message : err.message});
-                        return;
-                    }
-                    let data = result.value;
-                    data.etapa = 1.5;
-                    res.status(200).json(result.value);
+    axios.put(
+        `${ip}:${port}/pagares/${req.params.id}/etapa2`,
+        update,
+        {
+            headers: {
+                'Content-Type': 'application/json'
                 }
-            );
+            }
+        ).then(response =>{
+            let data = response.data;
+            data.etapa = 1.5;
+            res.status(201).send(data);
         })
-        .catch(err =>{
-            res.status(500).json({message : err.message});
+        .catch(err => {
+            res.status(500).json({message: err.message});
         });
-    }catch(err){
-        res.status(500).json({ErrorConexion: err.message})
-    }
 
 });
 
@@ -200,41 +135,25 @@ router.patch("/:id/etapa2", (req, res) =>{
 router.patch("/:id/etapa2/aceptar", (req, res) =>{
 
     let update = {
-        etapa : 2,
-        deudorAcepta : req.body.deudorAcepta, 
-        acreedorAcepta : req.body.acreedorAcepta, 
+        deudorAcepta : true, 
+        acreedorAcepta : true, 
     };
 
-    if(req.body.idAceptador === req.body.idDeudor){
-        update.deudorAcepta = true;
-    } else{
-        update.acreedorAcepta = true;
-    }
-
-    try{
-        Connection.connectToMongo()
-        .then(database =>{
-            const client = database.db(db).collection(collection);
-
-            client.findOneAndUpdate(
-                { _id: ObjectId(req.params.id)},
-                { $set : update},
-                {returnOriginal : false},
-                (err, result) =>{
-                    if(err){
-                        res.status(400).json({message : err.message});
-                        return;
-                    }
-                    res.status(200).json(result.value);
+    axios.put(
+        `${ip}:${port}/pagares/${req.params.id}/etapa2/aceptar`,
+        update,
+        {
+            headers: {
+                'Content-Type': 'application/json'
                 }
-            );
+            }
+        ).then(response =>{
+            let data = response.data;
+            res.status(201).send(data);
         })
-        .catch(err =>{
-            res.status(500).json({message : err.message});
+        .catch(err => {
+            res.status(500).json({message: err.message});
         });
-    }catch(err){
-        res.status(500).json({ErrorConexion: err.message})
-    }
 
 });
 
@@ -248,34 +167,25 @@ router.patch("/:id/etapa3", (req, res) =>{
     let update = {
         etapa : 3,
         lugarCreacion : req.body.lugarCreacion,
-        fechaVencimiento : getFecha(req.body.fechaVencimiento),
+        fechaVencimiento : req.body.fechaVencimiento,
         codigoRetiro : req.body.codigoRetiro,
     };
 
-    try{
-        Connection.connectToMongo()
-        .then(database =>{
-            const client = database.db(db).collection(collection);
-
-            client.findOneAndUpdate(
-                { _id: ObjectId(req.params.id)},
-                { $set : update},
-                {returnOriginal : false},
-                (err, result) =>{
-                    if(err){
-                        res.status(400).json({message : err.message});
-                        return;
-                    }
-                    res.status(200).json(result.value);
+    axios.put(
+        `${ip}:${port}/pagares/${req.params.id}/etapa3`,
+        update,
+        {
+            headers: {
+                'Content-Type': 'application/json'
                 }
-            );
+            }
+        ).then(response =>{
+            let data = response.data;
+            res.status(201).send(data);
         })
-        .catch(err =>{
-            res.status(500).json({message : err.message});
+        .catch(err => {
+            res.status(500).json({message: err.message});
         });
-    }catch(err){
-        res.status(500).json({ErrorConexion: err.message})
-    }
 
 });
 
@@ -286,91 +196,27 @@ router.patch("/:id/etapa3", (req, res) =>{
 router.patch("/:id/etapa4", (req, res) =>{
 
     let update = {
-        etapa : 4,
-        fechaCreacion : getFecha(req.body.fechaCreacion),
-        fechaExpiracion : getFecha(req.body.fechaExpiracion) ,
         firma: req.body.firma, 
     };
 
-    try{
-        Connection.connectToMongo()
-        .then(database =>{
-            const client = database.db(db).collection(collection);
-
-            client.findOneAndUpdate(
-                { _id: ObjectId(req.params.id)},
-                { $set : update},
-                {returnOriginal : false},
-                (err, result) =>{
-                    if(err){
-                        res.status(400).json({message : err.message});
-                        return;
-                    }
-                    res.status(200).json(result.value);
+    axios.put(
+        `${ip}:${port}/pagares/${req.params.id}/etapa4`,
+        update,
+        {
+            headers: {
+                'Content-Type': 'application/json'
                 }
-            );
+            }
+        ).then(response =>{
+            let data = response.data;
+            res.status(201).send(data);
         })
-        .catch(err =>{
-            res.status(500).json({message : err.message});
+        .catch(err => {
+            res.status(500).json({message: err.message});
         });
-    }catch(err){
-        res.status(500).json({ErrorConexion: err.message})
-    }
 
 });
 
-/**
- * Quinta Etapa
- */
 
-router.patch("/:id/etapa5", (req, res) =>{
-
-    let update = {
-        etapa : 5,
-        confirmacionRetiro : req.body.confirmacionRetiro,
-    };
-
-    try{
-        Connection.connectToMongo()
-        .then(database =>{
-            const client = database.db(db).collection(collection);
-
-            client.findOneAndUpdate(
-                { _id: ObjectId(req.params.id)},
-                { $set : update},
-                {returnOriginal : false},
-                (err, result) =>{
-                    if(err){
-                        res.status(400).json({message : err.message});
-                        return;
-                    }
-                    res.status(200).json(result.value);
-                }
-            );
-        })
-        .catch(err =>{
-            res.status(500).json({message : err.message});
-        });
-    }catch(err){
-        res.status(500).json({ErrorConexion: err.message})
-    }
-
-});
-
-let getFecha = (fecha) =>{
-
-    let fechaSplit = fecha.split("-");
-
-    let day = parseInt(fechaSplit[0]);
-
-    let month = parseInt(fechaSplit[1]) -1;
-
-    let year = parseInt(fechaSplit[2]);
-
-    let fechaDate = new Date(year, month,day);
-
-    return fechaDate;
-
-}
 
 module.exports = router;

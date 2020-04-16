@@ -167,7 +167,7 @@ export default class Login extends Component {
                                         </Form.Group>
                                         <Form.Group>
                                             <Form.Label htmlFor="contrasenia">Contraseña</Form.Label>
-                                            <Form.Control name="contrasenia" id="contrasenia" type="text" placeholder="Ej: pas$w0rD" onChange={this.handleContraseniaChange}></Form.Control>
+                                            <Form.Control name="contrasenia" id="contrasenia" type="password" placeholder="Ej: pas$w0rD" onChange={this.handleContraseniaChange}></Form.Control>
                                         </Form.Group>
                                         <div className="d-flex justify-content-center">
                                             <button type="submit" className="but-solid" onClick={this.handleSubmit}>Ingresar</button>
