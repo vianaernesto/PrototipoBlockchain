@@ -1,0 +1,83 @@
+.form-container {
+    padding: 4%;
+}
+
+p, a, button {
+    font-family: 'Lato', sans-serif;
+}
+
+
+h1, h2, h3, h4 {
+    font-family: 'Karla', sans-serif;
+}
+
+
+
+.title-card {
+    color: black !important;
+    transition: all 0.1s ease-out;
+    -webkit-transition: all 0.1s ease-out;
+    font-weight: 700;
+    font-style: normal;
+    letter-spacing: 0.05rem;
+    line-height: 2rem;
+    font-size: 1.5rem;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+}
+
+.title-card-success {
+    color: white !important;
+    transition: all 0.1s ease-out;
+    -webkit-transition: all 0.1s ease-out;
+    font-weight: 700;
+    font-style: normal;
+    letter-spacing: 0.05rem;
+    line-height: 2rem;
+    font-size: 1.5rem;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+}
+
+.title-card-ongoing {
+    color: black !important;
+    transition: all 0.1s ease-out;
+    -webkit-transition: all 0.1s ease-out;
+    font-weight: 700;
+    font-style: normal;
+    letter-spacing: 0.05rem;
+    line-height: 2rem;
+    font-size: 1.5rem;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+}
+
+.title-card:hover, .title-card:focus {
+
+    color: #00A8E8 !important;
+}
+
+.title-card-success:hover, .title-card-success:focus{
+    color: whitesmoke;
+}
+
+.title-card-ongoing:hover, .title-card-ongoing:focus{
+    color: black;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type=number] {
+    -moz-appearance:textfield; /* Firefox */
+}

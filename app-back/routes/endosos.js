@@ -23,7 +23,7 @@ router.get("/:id",(req,res) =>{
 * GET Endosos de un Pagaré
 */
 
-router.get("/:id/endosos", (req,res)=>{
+router.get("/pagare/:id", (req,res)=>{
     axios.get(`${ip}:${port}/pagares/${req.params.id}/endosos`)
         .then(response =>{
             res.status(200).json(response.data);
@@ -106,6 +106,33 @@ router.post("/pagare/:id/etapa3", (req, res) =>{
     });
 });
 
+
+/**
+ * GET Endoso dado un endosante
+ */
+router.get("/endosante/:id/", (req,res)=>{
+    axios.get(`${ip}:${port}/endosos/endosante/${req.params.id}`)
+        .then(response =>{
+            res.status(200).json(response.data);
+        })
+        .catch(err =>{
+            res.status(404).json({message:err.message});
+        })
+});
+
+
+/**
+* GET Endoso dado un endosatario
+*/
+router.get("/endosatario/:id/", (req,res)=>{
+    axios.get(`${ip}:${port}/endosos/endosatario/${req.params.id}`)
+        .then(response =>{
+            res.status(200).json(response.data);
+        })
+        .catch(err =>{
+            res.status(404).json({message:err.message});
+        })
+});
 
 
 module.exports = router;

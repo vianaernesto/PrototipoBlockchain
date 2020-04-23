@@ -25,8 +25,8 @@ export default class Navbar extends Component {
                         </Link>
                     </li>
                     <li className="nav-item mx-md-2">
-                        <Link to="/endososPendientes" className="nav-link">
-                            Endosos Pendientes
+                        <Link to="/endosos" className="nav-link">
+                            Endosos
                         </Link>
                     </li>
                     {this.revisarLogin()}

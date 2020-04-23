@@ -523,7 +523,7 @@ class CrearPagare extends Component {
         hmac.update(`${this.state.nombreAcreedor}${this.state.nombreDeudor}${this.state.idAcreedor}${this.state.idDeudor}${this.state.valor}${this.state.fechaCreacion}${this.state.lugarCreacion}$`);
         let firmaTemp = hmac.digest('hex');
         await this.setState({
-            firma : firmaTemp,
+            firma : firmaTemp.slice(0,30),
         });
 
         let data = {

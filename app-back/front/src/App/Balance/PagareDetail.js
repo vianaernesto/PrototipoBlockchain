@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import {Redirect} from 'react-router-dom';
+import {Redirect, Link} from 'react-router-dom';
 import axios from "axios";
 import jsPDF from 'jspdf';
 import $ from 'jquery';
@@ -44,7 +44,7 @@ class PagareDetail extends Component {
                 })
             }
             if(pagare.ultimoEndoso !== null){
-                axios.get(`endosos/${pagare._id}/endosos`,{headers : {"Content-Type" : "application/json"}})
+                axios.get(`endosos/pagare/${pagare._id}`,{headers : {"Content-Type" : "application/json"}})
                     .then(response =>{
                         let data = response.data;
                         this.setState({
@@ -158,11 +158,11 @@ class PagareDetail extends Component {
                     {this.redirect()}
                     {this.state.canEndose
                     ?   <div className="row">
-                            <div className="col-md-3 col-3 col-lg-3"></div>
+                            <div className="col-md-2 col-2 col-lg-2"></div>
                             <div className="col-md-6 col-6 col-lg-6">
-                                <button className="but-solid" onClick={this.endosar}>Endosar</button>
+                                <Link to ={{pathname: '/endoso/crear/', state: {pagare : this.props.location.state.pagare, usuario: {nombre: this.state.nombre, cedula:this.state.cedulaUsuario}}}}><button className={`but-solid`}>Endosar Pagaré</button></Link>
                             </div>
-                            <div className="col-md-3 col-3 col-lg-3"></div>
+                            <div className="col-md-4 col-4 col-lg-4"></div>
                         </div>
                     :   <div></div>
                 }
@@ -181,11 +181,11 @@ class PagareDetail extends Component {
                 {this.redirect()}
                 {this.state.canEndose
                 ?   <div className="row">
-                        <div className="col-md-3 col-3 col-lg-3"></div>
+                        <div className="col-md-2 col-2 col-lg-2"></div>
                         <div className="col-md-6 col-6 col-lg-6">
-                            <button className="but-solid" onClick={this.endosar}>Endosar</button>
+                            <Link to ={{pathname: '/endoso/crear/', state: {pagare : this.props.location.state.pagare, usuario: {nombre: this.state.nombre, cedula:this.state.cedulaUsuario}}}}><button className={`but-solid`}>Endosar Pagaré</button></Link>
                         </div>
-                        <div className="col-md-3 col-3 col-lg-3"></div>
+                        <div className="col-md-4 col-4 col-lg-4"></div>
                     </div>
                 :   <div></div>
                 }
@@ -210,7 +210,7 @@ class PagareDetail extends Component {
                                             )
                                         } else{
                                             return(
-                                                <div></div>
+                                                <div key={i}></div>
                                             )
                                         }
                                     })}
@@ -225,7 +225,6 @@ class PagareDetail extends Component {
                                                         <div className={`tab pane ${i===0 ? 'active': ''}`} id={`list-${i}`} role="tabpanel" aria-labelledby={`list-${i}-list`} ref={`list${i}`}>
                                                             <div className="row">
                                                                 <div className="col-md-12 col-lg-12">
-                                                                    <h6  className="font-weight-bold" >
                                                                     <h6 className="font-weight-bold">
                                                                         Nombre Endosante:
                                                                     </h6>
@@ -233,7 +232,7 @@ class PagareDetail extends Component {
                                                                         {x.nombre_endosante}
                                                                     </h6>
                                                                     Cedula Endosante:
-                                                                    </h6>
+                                                                    
                                                                     <h6>
                                                                         {x.id_endosante}
                                                                     </h6>  
