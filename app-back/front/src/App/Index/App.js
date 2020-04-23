@@ -16,6 +16,8 @@ import Home from "../Home/Home.js";
 import Footer from "../Footer/Footer.js";
 import Balance from "../Balance/Balance.js";
 import PagareDetail from "../Balance/PagareDetail.js";
+import CrearEndoso from "../Endosos/CrearEndoso.js";
+import EndososPendientes from "../Endosos/EndososPendientes.js";
 
 let jwt = require('jsonwebtoken');
 const cookies = new Cookies();
@@ -59,6 +61,8 @@ export default class App extends React.Component {
                 <PrivateRoute exact path="/pagare/crear" component={ (props) => <CrearPagare {...props} getUsuario={this.getUsuario} />} getUsuario={this.getUsuario} />
                 <PrivateRoute exact path="/balance" component={ (props) => <Balance {...props} getUsuario={this.getUsuario} />} getUsuario={this.getUsuario}/>
                 <PrivateRoute exact path="/pagareDetail" component={PagareDetail} getUsuario={this.getUsuario} />
+                <PrivateRoute exact path="/endoso/crear" component={ (props) => <CrearEndoso {...props} getUsuario={this.getUsuario}/>} getUsuario={this.getUsuario}/>
+                <PrivateRoute exact path="/endosospendientes" component={(props)=> <EndososPendientes {...props} getUsuario={this.getUsuario}/>} getUsuario={this.getUsuario}/>
               </Switch>
             </div>
             <Footer/>

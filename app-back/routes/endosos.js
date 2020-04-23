@@ -33,4 +33,79 @@ router.get("/:id/endosos", (req,res)=>{
         })
 })
 
+/**
+ * POST endoso en etapa 1
+ */
+router.post("/pagare/:id/etapa1", (req, res) =>{
+     const newEndoso = {
+         id_endosante : req.body.id_endosante,
+         id_endosatario : req.body.id_endosatario,
+         nombre_endosante : req.body.nombre_endosante,
+         nombre_endosatario : req.body.nombre_endosatario
+     }
+
+     axios.post(
+         `${ip}:${port}/pagares/${req.params.id}/endosos/etapa1`,
+         newEndoso,
+         {
+             headers:{
+                 'Content-Type' : 'application/json'
+             }
+         }
+     ).then(response =>{
+         res.status(201).send(response.data);
+     })
+     .catch(err =>{
+         res.status(500).json({message: err.message});
+     });
+});
+
+/**
+ * POST Endoso etapa 2
+ */
+router.post("/pagare/:id/etapa2", (req, res) =>{
+    const newEndoso = {
+        codigo_retiro : req.body.codigo_retiro,
+    }
+    axios.post(
+        `${ip}:${port}/pagares/${req.params.id}/endosos/etapa2`,
+        newEndoso,
+        {
+            headers:{
+                'Content-Type' : 'application/json'
+            }
+        }
+    ).then(response =>{
+        res.status(201).send(response.data);
+    })
+    .catch(err =>{
+        res.status(500).json({message: err.message});
+    });
+});
+
+/**
+* POST Endoso etapa 3
+*/
+router.post("/pagare/:id/etapa3", (req, res) =>{
+    const newEndoso = {
+        firma : req.body.firma,
+    }
+    axios.post(
+        `${ip}:${port}/pagares/${req.params.id}/endosos/etapa3`,
+        newEndoso,
+        {
+            headers:{
+                'Content-Type' : 'application/json'
+            }
+        }
+    ).then(response =>{
+        res.status(201).send(response.data);
+    })
+    .catch(err =>{
+        res.status(500).json({message: err.message});
+    });
+});
+
+
+
 module.exports = router;

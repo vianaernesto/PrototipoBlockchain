@@ -5,6 +5,7 @@ import jsPDF from 'jspdf';
 import DatePicker from 'react-datepicker';
 import {registerLocale} from 'react-datepicker';
 import es from 'date-fns/locale/es'
+import { addYears } from 'date-fns';
 import crypto from 'crypto';
 
 
@@ -50,6 +51,7 @@ class CrearPagare extends Component {
          this.handleChangeEtapa2 = this.handleChangeEtapa2.bind(this);
          this.handleEtapa2 = this.handleEtapa2.bind(this);
          this.handleEtapa2Aceptar = this.handleEtapa2Aceptar.bind(this);
+         this.handleEtapa2Rechazar= this.handleEtapa2Rechazar.bind(this);
          this.handleChangeEtapa3 = this.handleChangeEtapa3.bind(this);
          this.handleEtapa3 = this.handleEtapa3.bind(this);
          this.handleChangeDate = this.handleChangeDate.bind(this);
@@ -455,6 +457,37 @@ class CrearPagare extends Component {
 
     }
 
+    handleEtapa2Rechazar(event){
+        event.preventDefault();
+
+        var data = {
+            valor :this.state.valor,
+            terminos : this.state.terminos,
+            idAceptador : this.state.idAceptador,
+            idDeudor : this.state.idDeudor,
+            idAcreedor : this.state.idAcreedor,
+            etapa : 1,
+        }
+        
+        axios.patch(
+            `/pagares/${this.state.id}/etapa2`,
+            data,
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        ).then(response =>{
+            let pagare = response.data;
+            console.log(pagare);
+                this.setState({
+                    etapa : pagare.etapa,
+                });
+                
+        });
+
+    }
+
     handleEtapa3(event) {
         event.preventDefault();
         const vencimiento = this.state.fechaVencimiento;
@@ -485,12 +518,9 @@ class CrearPagare extends Component {
 
     async handleEtapa4(event){
         event.preventDefault();
-        let pagare = this.state.id;
         let contra = this.state.contrasenia;
-        let {usuario} = this.props.location.state;
-        let cedula = usuario.cedula;
-        const hmac = crypto.createHmac('md5',contra)
-        hmac.update(`${pagare}${cedula}`);
+        const hmac = crypto.createHmac('sha512',contra);
+        hmac.update(`${this.state.nombreAcreedor}${this.state.nombreDeudor}${this.state.idAcreedor}${this.state.idDeudor}${this.state.valor}${this.state.fechaCreacion}${this.state.lugarCreacion}$`);
         let firmaTemp = hmac.digest('hex');
         await this.setState({
             firma : firmaTemp,
@@ -754,7 +784,14 @@ class CrearPagare extends Component {
                                 <label htmlFor="Condiciones">Condiciones</label>
                                 <input name="terminos" type="text" className="form-control" id="terminos" placeholder={this.state.terminos} disabled={true}/>
                             </div>
-                                <button name="proponer" type="submit" className="btn btn-primary" onClick={this.handleEtapa2Aceptar}>Aceptar Condiciones</button>
+                            <div className="row">
+                                <div className="col-md-6 col-lg-6 col-6">
+                                    <button name="proponer" type="submit" className="btn btn-primary" onClick={this.handleEtapa2Aceptar}>Aceptar Condiciones</button>
+                                </div>
+                                <div className="col-md-6 col-lg-6 col-6">
+                                    <button name="rechazar" type="submit" className="btn btn-primary" onClick={this.handleEtapa2Rechazar}>Rechazar Condiciones</button>
+                                </div>
+                            </div>
                         </form>
                      </div>
                      <div className="col-6 col-md-6 col-lg-6"></div>
@@ -833,7 +870,7 @@ class CrearPagare extends Component {
                             </div>
                             <div className="form-group">
                                 <label htmlFor="fechaVencimiento">Fecha de Vencimiento</label>
-                                <DatePicker id="fechaVencimiento" name="fechaVencimiento" locale="es" selected={this.state.fechaVencimiento} onChange={this.handleChangeDate} disabled={this.isDisabled(2,'input')} dateFormat='dd/MM/yyyy' />
+                                <DatePicker id="fechaVencimiento" name="fechaVencimiento" locale="es" selected={this.state.fechaVencimiento} onChange={this.handleChangeDate} disabled={this.isDisabled(2,'input')} dateFormat='dd/MM/yyyy' minDate={new Date()} maxDate={addYears(new Date(),5)}/>
                             </div>
                             <div className="form-group">
                                     <label htmlFor="codigoRetiro">Código de retiro</label>
@@ -920,7 +957,7 @@ class CrearPagare extends Component {
                                 <label htmlFor="contrasenia">Digite su contraseña para poder firmar:</label>
                                 <input name="contrasenia" type="password" onChange={this.handleChangeContrasenia} className="form-control" id="contrasenia" placeholder="Contrasenia" disabled={this.isDisabled(3,'input')}/>
                             </div>
-                                <button name="firmar" type="submit" className="btn btn-success" onClick={this.handleEtapa4} disabled={!this.state.isContrasenia} >Siguiente Paso</button>
+                                <button name="firmar" type="submit" className="btn btn-success" onClick={this.handleEtapa4} disabled={!this.state.isContrasenia} >Firmar</button>
                         </form>
                      </div>
                      <div className="col-6 col-md-6 col-lg-6"></div>

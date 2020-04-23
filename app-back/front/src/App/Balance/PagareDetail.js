@@ -2,6 +2,9 @@ import React, { Component } from "react";
 import {Redirect} from 'react-router-dom';
 import axios from "axios";
 import jsPDF from 'jspdf';
+import $ from 'jquery';
+
+import './PagareDetail.css';
 
 class PagareDetail extends Component {
     constructor(props) {
@@ -29,7 +32,7 @@ class PagareDetail extends Component {
         this.renderPDF = this.renderPDF.bind(this);
         this.redirect = this.redirect.bind(this);
         this.setUpPDF = this.setUpPDF.bind(this);
-        this.renderEndosos = this.renderEndosos.bind(this);
+        this.changeEndoso = this.changeEndoso.bind(this);
     }
 
     componentDidMount(){
@@ -85,7 +88,6 @@ class PagareDetail extends Component {
     }
 
     setUpPDF(pagare){
-        console.log(pagare);
         let creacion = new Date(pagare.fechaCreacion)
         let dia = creacion.getDate().toString();
         let mes = creacion.getMonth().toString();
@@ -137,29 +139,17 @@ class PagareDetail extends Component {
             </div>
         )
     }
-
-    renderEndosos(){
-        this.state.endosos.map((x,i) =>{
-            return(
-                <div key={i}>
-                    <div className="col-lg-4 col-md-8 col-sm-12">
-                        <div className="card" style={{width: "18em"}}>
-                            <div className="card-body">
-                            <p className="card-text text-left" style={{fontWeight:"bold"}}>Endoso #{x._id}</p>
-                            <h2 className="card-title"><span className="text-left font-weight-bold">Nombre Titular:</span><span className="text-right"> ${x.nombre_endosatario}</span></h2>
-                            </div>
-                            <ul className="list-group list-group-flush">
-                                <li className="list-group-item"><span  className="text-left font-weight-bold">Cédula Endosante: </span><span className="text-right">{x.id_endosante}</span></li>
-                                <li className="list-group-item"><span  className="text-left font-weight-bold">Fecha de Endosamiento: </span><span className="text-right">{new Date(x.fecha).getDate()}/{new Date(x.fecha).getMonth() + 1}/{new Date(x.fecha).getFullYear()}</span></li>
-                                <li className="list-group-item"><span  className="text-left font-weight-bold">Creado en: </span><span className="text-right">{x.lugarCreacion}</span></li>
-                                <li className="list-group-item"><span  className="text-left font-weight-bold">Fecha de Expiración: </span><span className="text-right">{new Date(x.fechaExpiracion).getDate()}/{new Date(x.fechaExpiracion).getMonth() + 1}/{new Date(x.fechaExpiracion).getFullYear()}</span></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            )
-        });
+    changeEndoso(i,change){
+        if(change === 'previous' && i>0){
+            let j = i+1;
+            $(`#list-${j}`).tab('show');
+        }else if(change === 'next' && i < this.state.endosos.length){
+            let j = i-1;
+            $(`#list-${j}`).tab('show');
+        }
     }
+
+    
 
     render() { 
         if(this.state.endosos.length ===0){
@@ -198,14 +188,99 @@ class PagareDetail extends Component {
                         <div className="col-md-3 col-3 col-lg-3"></div>
                     </div>
                 :   <div></div>
-            }
+                }
                 <div className="row">&nbsp;</div>
                 <div className="row">
                     <div className="col-md-6 col-6 col-lg-6">
                         {this.renderPDF()}
                     </div>
                     <div className="col-md-6 col-6 col-lg-6">
-                        {this.renderEndosos()}
+                        <div className="row">
+                            <div className="col-6 col-md-6 col-lg-6">
+                                <div className="list-group" id="list-tab" role="tablist">
+                                    {this.state.endosos.map((x,i) =>{
+                                        if(x.etapa > 2){
+                                            return(
+                                                <div key={i}>
+                                                    <a className={`list-group-item list-group-item-action ${i=== 0 ? 'active' : ''}`} id={`list-${i}-list`} data-toggle='list' href={`#list-${i}`} role="tab" aria-controls={`Endoso ${i}`}>
+                                                    <h6 style={i=== 0 ? {color:"white"} : {color:"black"}}>{`Endosado por: ${x.nombre_endosante} `}
+                                                        {x.es_ultimo_endoso ? <span className="badge badge-success">Último Endoso</span> : <span></span>}</h6>
+                                                    </a>                
+                                                </div>
+                                            )
+                                        } else{
+                                            return(
+                                                <div></div>
+                                            )
+                                        }
+                                    })}
+                                </div>
+                            </div>
+                            <div className="col-md-6 col-6 col-lg-6">
+                                <div className="tab-content" id="nav-tabContent">
+                                        {this.state.endosos.map((x,i)=>{
+                                            if(x.etapa > 2){
+                                                return (
+                                                    <div key={i}>
+                                                        <div className={`tab pane ${i===0 ? 'active': ''}`} id={`list-${i}`} role="tabpanel" aria-labelledby={`list-${i}-list`} ref={`list${i}`}>
+                                                            <div className="row">
+                                                                <div className="col-md-12 col-lg-12">
+                                                                    <h6  className="font-weight-bold" >
+                                                                    <h6 className="font-weight-bold">
+                                                                        Nombre Endosante:
+                                                                    </h6>
+                                                                    <h6 >
+                                                                        {x.nombre_endosante}
+                                                                    </h6>
+                                                                    Cedula Endosante:
+                                                                    </h6>
+                                                                    <h6>
+                                                                        {x.id_endosante}
+                                                                    </h6>  
+                                                                    <h6 className="font-weight-bold">
+                                                                        Firma Endosante:
+                                                                        
+                                                                    </h6>
+                                                                    <h6>
+                                                                        {x.firma}
+                                                                    </h6>
+                                                                    <h6 className="font-weight-bold">
+                                                                        Nombre Endosatario:
+                                                                    </h6>
+                                                                    <h6>
+                                                                    {x.nombre_endosatario}
+                                                                    </h6>
+                                                                    <h6 className="font-weight-bold">
+                                                                        Cedula Endosatario:
+                                                                       
+                                                                    </h6>
+                                                                    <h6>
+                                                                        {x.id_endosatario}
+                                                                    </h6>
+                                                                    <h6 className="font-weight-bold">
+                                                                        Fecha de Endosamiento:
+                                                                    </h6>
+                                                                    <h6>
+                                                                    {`${new Date(x.fecha).getDate()}/${new Date(x.fecha).getMonth() + 1}/${new Date(x.fecha).getFullYear()}`}
+                                                                    </h6>
+                                                                </div>
+                                                            </div>
+                                                            <div className="row">
+                                                                <div className="col-md-6 col-6 col-lg-6">
+                                                                    <button className="but-solid" disabled={i===0 ? true:false} onClick={this.changeEndoso(i,'previous')}>Anterior</button>
+                                                                </div>
+                                                                <div className="col-md-6 col-6 col-lg-6">
+                                                                <button className="but-solid" disabled={i===this.state.endosos.length-1 ? true:false} onClick={this.changeEndoso(i,'next')}>Siguiente</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            } 
+                                        })}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div className="row">&nbsp;</div>

@@ -93,8 +93,12 @@ router.post("/etapa1", (req, res) =>{
 
 router.patch("/:id/etapa2", (req, res) =>{
 
+    let etapaLocal = 1.5;
+    if(req.body.etapa == 1){
+        etapaLocal = 1;
+    }
     let update = {
-        etapa : 1.5,
+        etapa : etapaLocal,
         terminos : req.body.terminos,
         valor : req.body.valor,
         deudorAcepta : false,
@@ -118,7 +122,12 @@ router.patch("/:id/etapa2", (req, res) =>{
             }
         ).then(response =>{
             let data = response.data;
-            data.etapa = 1.5;
+            if(etapaLocal == 1.5){
+                data.etapa = 1.5;
+            }else{
+                data.etapa = 1;
+            }
+            
             res.status(201).send(data);
         })
         .catch(err => {

@@ -326,22 +326,27 @@ class Balance extends Component {
             </div>
             <div className="row align-content-start">
             <div className="col-lg-6 col-6 col-md-6">
-                <div className="col-lg-8 col-8 col-md-8">
+                {this.state.pagaresAfavor.length !== 0 
+                ? <div className="col-lg-8 col-8 col-md-8">
                     <nav aria-label="breadcrumb">
                         <ol className="breadcrumb">
                             <li className="breadcrumb-item active" aria-current="page"><h5 className="favor">Total a Favor:  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${this.state.totalCobro}</h5></li>
                         </ol>
                     </nav>
                 </div>
+                : <div></div>}
                 </div>
                 <div className="col-lg-6 col-6 col-md-6">
-                <div className="col-lg-8 col-8 col-md-8">
+                {this.state.pagaresEnContra.length !== 0
+                ? <div className="col-lg-8 col-8 col-md-8">
                     <nav aria-label="breadcrumb">
                         <ol className="breadcrumb">
                             <li className="breadcrumb-item active" aria-current="page"><h5 className="contra">Total en Contra:  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${this.state.totalDeuda< 0 ? 0: this.state.totalDeuda }</h5></li>
                         </ol>
                     </nav>
                 </div>
+                : <div></div>
+                }
                 </div>
             </div>
             <Switch>

@@ -24,6 +24,11 @@ export default class Navbar extends Component {
                             Balance
                         </Link>
                     </li>
+                    <li className="nav-item mx-md-2">
+                        <Link to="/endososPendientes" className="nav-link">
+                            Endosos Pendientes
+                        </Link>
+                    </li>
                     {this.revisarLogin()}
                 </ul>
             );
