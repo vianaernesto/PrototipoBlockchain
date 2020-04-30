@@ -6,10 +6,13 @@ import DatePicker from 'react-datepicker';
 import {registerLocale} from 'react-datepicker';
 import es from 'date-fns/locale/es'
 import { addYears } from 'date-fns';
-import crypto from 'crypto';
+import Eth from 'ethjs-query';
+import EthContract  from 'ethjs-contract';
+import {BoxLoading} from 'react-loadingg';
 
 
 import "react-datepicker/dist/react-datepicker.css";
+import {abi, address} from '../metamask/abi.js';
 import './CrearPagare.css';
 
 registerLocale('es', es)
@@ -43,7 +46,8 @@ class CrearPagare extends Component {
             contrasenia : '',
             firma : '',
             isSame : false,
-         }
+            isweb3 : false,
+        }
 
          this.redirect = this.redirect.bind(this);
          this.handleChangeEtapa1 = this.handleChangeEtapa1.bind(this);
@@ -65,6 +69,8 @@ class CrearPagare extends Component {
          this.renderEtapa3 = this.renderEtapa3.bind(this);
          this.renderEtapa4 = this.renderEtapa4.bind(this);
          this.updatePDF = this.updatePDF.bind(this);
+         this.isWeb3 = this.isWeb3.bind(this);
+         this.waitForTxToBeMined = this.waitForTxToBeMined.bind(this);
     }
 
 
@@ -127,7 +133,8 @@ class CrearPagare extends Component {
                         nombreDeudor: pagare.nombreDeudor,
                         terminos : pagare.terminos,
                         valor: pagare.valor,
-                        idAceptador : idAceptadorNew
+                        idAceptador : idAceptadorNew,
+                        lugarCreacion : pagare.lugarCreacion,
                     });
 
                 } else{
@@ -153,7 +160,8 @@ class CrearPagare extends Component {
                         nombreAcreedor : pagare.nombreAcreedor,
                         terminos : pagare.terminos,
                         valor: pagare.valor,
-                        idAceptador : idAceptadorNew
+                        idAceptador : idAceptadorNew,
+                        lugarCreacion : pagare.lugarCreacion,
                     });
 
                 }
@@ -164,6 +172,7 @@ class CrearPagare extends Component {
             this.setState({redirect: true});
         }
        this.setup();
+       this.isWeb3();
     }
 
     setup(){
@@ -212,6 +221,14 @@ class CrearPagare extends Component {
             pdf:pdf,
             cambiado:"true",
         });
+    }
+
+    isWeb3(){
+        if(typeof web3 !== 'undefined'){
+            this.setState({
+                isweb3 : true,
+            })
+        }
     }
 
     renderPreview(){
@@ -517,32 +534,44 @@ class CrearPagare extends Component {
 
 
     async handleEtapa4(event){
-        event.preventDefault();
-        let contra = this.state.contrasenia;
-        const hmac = crypto.createHmac('sha512',contra);
-        hmac.update(`${this.state.nombreAcreedor}${this.state.nombreDeudor}${this.state.idAcreedor}${this.state.idDeudor}${this.state.valor}${this.state.fechaCreacion}${this.state.lugarCreacion}$`);
-        let firmaTemp = hmac.digest('hex');
-        await this.setState({
-            firma : firmaTemp.slice(0,30),
-        });
+        event.preventDefault(); 
+        let fecha = new Date();
+        let fechaExpiracion = new Date(fecha.getFullYear() + 5, fecha.getMonth(), fecha.getDate());
+        let fechaVencimiento = new Date(this.state.fechaVencimiento);
+        let info = `${fecha.toLocaleDateString()}, ${fechaVencimiento.toLocaleDateString()}, ${fechaExpiracion.toLocaleDateString()}, ${this.state.lugarCreacion}`;
+        let infoAcreedor = `${this.state.idAcreedor}, ${this.state.nombreAcreedor}`;
+        let infoDeudor = `${this.state.idDeudor}, ${this.state.nombreDeudor}`;
+        const eth = new Eth(window.web3.currentProvider);
+        const account = window.web3.eth.accounts[0];
+        const contract = new EthContract(eth);
+        const MiniToken = contract(abi);
+        const miniToken = MiniToken.at(address);
+        miniToken.createPagare(this.state.id.toString(), this.state.valor.toString(), infoDeudor, infoAcreedor, info, {from: account}).then((txHash) =>{
+            console.log('Transaction sent')
+            console.dir(txHash);
+    
+            this.waitForTxToBeMined(txHash);
+                
+        }).catch(console.error);
 
+    }
+
+    async waitForTxToBeMined(txHash){
         let data = {
-            firma : this.state.firma,
+            firma : "no importa",
         }
-        axios.patch(
-            `/pagares/${this.state.id}/etapa4`,
-            data,
-            {
-                headers: {
-                    'Content-Type':'application/json'
-                }
+        let txReceipt;
+        while(!txReceipt || txReceipt == null){
+            try{
+                await window.web3.eth.getTransactionReceipt(txHash, (err, response)=>{
+                    if(!err){
+                        console.log(response);
+                    }
+                });
+            }catch(err){
+                return console.log(err);
             }
-        ).then(response =>{
-            this.setState({
-                isContrasenia: false,
-                redirect : true,
-            });
-        })
+        }
     }
 
     isDisabled(pEtapa,element){
@@ -957,7 +986,7 @@ class CrearPagare extends Component {
                                 <label htmlFor="contrasenia">Digite su contraseña para poder firmar:</label>
                                 <input name="contrasenia" type="password" onChange={this.handleChangeContrasenia} className="form-control" id="contrasenia" placeholder="Contrasenia" disabled={this.isDisabled(3,'input')}/>
                             </div>
-                                <button name="firmar" type="submit" className="btn btn-success" onClick={this.handleEtapa4} disabled={!this.state.isContrasenia} >Firmar</button>
+                                <button name="firmar" type="submit" className="btn btn-success" onClick={this.handleEtapa4} disabled={!this.state.isContrasenia && this.state.isweb3} data-target="#Modal" data-toggle="Modal">Firmar</button>
                         </form>
                      </div>
                      <div className="col-6 col-md-6 col-lg-6"></div>
@@ -1077,6 +1106,18 @@ class CrearPagare extends Component {
         </div>
         <div className="col-md-6 col-lg-6 col-6">{this.renderPreview()}</div>
         </div>
+        <div className="modal fade" id="Modal" tabIndex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div className="modal-dialog" role="document">
+                <div className="modal-content">
+                <div className="modal-header">
+                    <h5 className="modal-title" id="ModalLabel">Esperando a confirmación de la transacción</h5>
+                </div>
+                <div className="modal-body">
+                    <BoxLoading/>
+                </div>
+                </div>
+            </div>
+            </div>
         </div>  );
     }
 }
