@@ -563,11 +563,12 @@ class CrearPagare extends Component {
         let txReceipt;
         while(!txReceipt || txReceipt == null){
             try{
-                await window.web3.eth.getTransactionReceipt(txHash, (err, response)=>{
+                window.web3.eth.getTransactionReceipt(txHash, function(err, algo){
+                    console.log(err);
                     if(!err){
-                        console.log(response);
+                        console.log(algo);
                     }
-                });
+                })
             }catch(err){
                 return console.log(err);
             }
