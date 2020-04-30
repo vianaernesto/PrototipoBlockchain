@@ -8,8 +8,8 @@ import es from 'date-fns/locale/es'
 import { addYears } from 'date-fns';
 import Eth from 'ethjs-query';
 import EthContract  from 'ethjs-contract';
-import {BoxLoading} from 'react-loadingg';
-
+import {CircleToBlockLoading} from 'react-loadingg';
+import Modal from 'react-bootstrap/Modal';
 
 import "react-datepicker/dist/react-datepicker.css";
 import {abi, address} from '../metamask/abi.js';
@@ -47,6 +47,7 @@ class CrearPagare extends Component {
             firma : '',
             isSame : false,
             isweb3 : false,
+            show: false,
         }
 
          this.redirect = this.redirect.bind(this);
@@ -71,6 +72,7 @@ class CrearPagare extends Component {
          this.updatePDF = this.updatePDF.bind(this);
          this.isWeb3 = this.isWeb3.bind(this);
          this.waitForTxToBeMined = this.waitForTxToBeMined.bind(this);
+         this.getConfirmation = this.getConfirmation.bind(this);
     }
 
 
@@ -556,24 +558,47 @@ class CrearPagare extends Component {
 
     }
 
-    async waitForTxToBeMined(txHash){
+    waitForTxToBeMined(txHash){
+        var self = this;
+        this.setState({
+            show : true,
+        });
+            setTimeout(function(){
+                self.getConfirmation(txHash);
+            }, 10000);
+    }
+
+    getConfirmation(txHash){
+        let eth = window.web3.eth;
+        var self = this;
         let data = {
             firma : "no importa",
         }
+        let id = this.state.id;
         let txReceipt;
-        while(!txReceipt || txReceipt == null){
-            try{
-                window.web3.eth.getTransactionReceipt(txHash, function(err, algo){
-                    console.log(err);
-                    if(!err){
-                        console.log(algo);
-                    }
-                })
-            }catch(err){
-                return console.log(err);
+        eth.getTransactionReceipt(txHash,function(error, result){
+            if(!error){
+                txReceipt = result;
+                console.log(txReceipt);
+                if(txReceipt!= null){
+                    axios.patch(`/pagares/${id}/etapa4`, data,{headers:{'Content-Type': 'application/json'}})
+                    .then(response =>{
+                        self.setState({
+                            isContrasenia: false,
+                            show: false,
+                            redirect:true,
+                        });
+                    })
+                }else{
+                    self.waitForTxToBeMined(txHash);
+                }
+                
             }
-        }
+            else
+                console.error(error);
+        });
     }
+
 
     isDisabled(pEtapa,element){
         if(element === 'card'){
@@ -985,9 +1010,9 @@ class CrearPagare extends Component {
                         <form>
                             <div className="form-group">
                                 <label htmlFor="contrasenia">Digite su contraseña para poder firmar:</label>
-                                <input name="contrasenia" type="password" onChange={this.handleChangeContrasenia} className="form-control" id="contrasenia" placeholder="Contrasenia" disabled={this.isDisabled(3,'input')}/>
+                                <input name="contrasenia" type="password" onChange={this.handleChangeContrasenia} className="form-control" id="contrasenia" placeholder="Contraseña" disabled={this.isDisabled(3,'input')}/>
                             </div>
-                                <button name="firmar" type="submit" className="btn btn-success" onClick={this.handleEtapa4} disabled={!this.state.isContrasenia && this.state.isweb3} data-target="#Modal" data-toggle="Modal">Firmar</button>
+                                <button name="firmar" type="submit" className="btn btn-success" onClick={this.handleEtapa4} disabled={!this.state.isContrasenia && this.state.isweb3}>Firmar</button>
                         </form>
                      </div>
                      <div className="col-6 col-md-6 col-lg-6"></div>
@@ -1107,18 +1132,27 @@ class CrearPagare extends Component {
         </div>
         <div className="col-md-6 col-lg-6 col-6">{this.renderPreview()}</div>
         </div>
-        <div className="modal fade" id="Modal" tabIndex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true">
-            <div className="modal-dialog" role="document">
-                <div className="modal-content">
-                <div className="modal-header">
-                    <h5 className="modal-title" id="ModalLabel">Esperando a confirmación de la transacción</h5>
+        <Modal show={this.state.show}>
+            <Modal.Header>
+                <Modal.Title>Esperando confirmación</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <div className="row">
+                    <h6>Se está confirmando la transacción, cuando se confirme te redigiremos a tu balance.</h6>
                 </div>
-                <div className="modal-body">
-                    <BoxLoading/>
+                <div className="row">
+                    &nbsp;
                 </div>
+                <div className="row">
+                &nbsp;
                 </div>
-            </div>
-            </div>
+            <Modal.Footer>
+                <div className="row">
+                    <CircleToBlockLoading size={35} />
+                </div>
+            </Modal.Footer>
+            </Modal.Body>
+            </Modal>
         </div>  );
     }
 }
