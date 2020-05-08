@@ -9,6 +9,7 @@
     "@testing-library/user-event": "^7.2.1",
     "axios": "^0.19.2",
     "bootstrap": "^4.4.1",
+    "ethereum-ens": "^0.8.0",
     "ethjs-contract": "^0.2.3",
     "ethjs-query": "^0.3.8",
     "jquery": "^3.4.1",
@@ -27,7 +28,8 @@
     "react-router-dom": "^5.1.2",
     "react-scripts": "3.4.0",
     "reactstrap": "^8.4.1",
-    "universal-cookie": "^4.0.3"
+    "universal-cookie": "^4.0.3",
+    "web3": "^1.2.7"
   },
   "scripts": {
     "start": "react-scripts start",

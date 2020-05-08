@@ -10,6 +10,8 @@ import Eth from 'ethjs-query';
 import EthContract  from 'ethjs-contract';
 import {CircleToBlockLoading} from 'react-loadingg';
 import Modal from 'react-bootstrap/Modal';
+import Button from 'react-bootstrap/Button';
+import Web3 from 'web3';
 
 import "react-datepicker/dist/react-datepicker.css";
 import {abi, address} from '../metamask/abi.js';
@@ -48,6 +50,8 @@ class CrearPagare extends Component {
             isSame : false,
             isweb3 : false,
             show: false,
+            show2: false,
+            account : "",
         }
 
          this.redirect = this.redirect.bind(this);
@@ -226,7 +230,17 @@ class CrearPagare extends Component {
     }
 
     isWeb3(){
+        
         if(typeof web3 !== 'undefined'){
+            let newWeb3 = new Web3(window.web3.currentProvider);
+            newWeb3.eth.getAccounts().then(accounts =>{
+                if(accounts.length !== 0){
+                    let userAddress = accounts[0];
+                    this.setState({
+                        account: userAddress,
+                    })
+                }
+            });
             this.setState({
                 isweb3 : true,
             })
@@ -381,7 +395,10 @@ class CrearPagare extends Component {
             }
 
         }).catch(err => {
-        })
+            this.setState({
+                show2 : true,
+            });
+        });
     }
     
     async handleEtapa1(event) {
@@ -544,7 +561,7 @@ class CrearPagare extends Component {
         let infoAcreedor = `${this.state.idAcreedor}, ${this.state.nombreAcreedor}`;
         let infoDeudor = `${this.state.idDeudor}, ${this.state.nombreDeudor}`;
         const eth = new Eth(window.web3.currentProvider);
-        const account = window.web3.eth.accounts[0];
+        const account = this.state.account;
         const contract = new EthContract(eth);
         const MiniToken = contract(abi);
         const miniToken = MiniToken.at(address);
@@ -554,7 +571,11 @@ class CrearPagare extends Component {
     
             this.waitForTxToBeMined(txHash);
                 
-        }).catch(console.error);
+        }).catch(error=>{
+            this.setState({
+                show2: true,
+            })
+        });
 
     }
 
@@ -1132,13 +1153,34 @@ class CrearPagare extends Component {
         </div>
         <div className="col-md-6 col-lg-6 col-6">{this.renderPreview()}</div>
         </div>
+        <Modal show={this.state.show2} onHide={()=>{this.setState({show2:false})}}>
+        <Modal.Header closeButton>
+            <Modal.Title>Transacción rechazada</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+            <div className="row">
+                <h6>&nbsp;Rechazaste la transacción</h6>
+            </div>
+            <div className="row">
+                &nbsp;
+            </div>
+            <div className="row">
+                <h6>&nbsp;Para firmar el pagaré necesitas confirmar la transacción</h6>
+            </div>
+        </Modal.Body>
+        <Modal.Footer>
+            <Button className="but-solid" onClick={() =>{this.setState({show2:false})}}>
+                Cerrar
+            </Button>
+            </Modal.Footer>
+        </Modal>
         <Modal show={this.state.show}>
             <Modal.Header>
                 <Modal.Title>Esperando confirmación</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <div className="row">
-                    <h6>Se está confirmando la transacción, cuando se confirme te redigiremos a tu balance.</h6>
+                    <h6>&nbsp;Se está confirmando la transacción, cuando se confirme te redigiremos a tu balance.</h6>
                 </div>
                 <div className="row">
                     &nbsp;
