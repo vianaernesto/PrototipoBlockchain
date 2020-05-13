@@ -89,7 +89,6 @@ class HandlerGenerator {
                                     }
                                     else {
                                         if(!propio){
-                                            console.log(domain.split('.')[0]);
                                             const ens = {
                                                 subdomain : domain.split('.')[0],
                                                 owner : address,
