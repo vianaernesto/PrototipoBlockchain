@@ -5,6 +5,7 @@ import ENS from 'ethereum-ens';
 import Web3 from 'web3';
 import { CircleToBlockLoading } from 'react-loadingg';
 import Modal from 'react-bootstrap/Modal';
+import Button from 'react-bootstrap/Button';
 import Eth from 'ethjs-query';
 import EthContract from 'ethjs-contract';
 import { address2, abi2 } from '../metamask/abi.js';
@@ -51,6 +52,7 @@ export default class Registrar extends Component {
             isUser: false,
             address: "",
             show: false,
+            show2: false,
             domain: '',
             domainSubmit: 'propio',
         }
@@ -69,62 +71,70 @@ export default class Registrar extends Component {
         let isweb3 = typeof window.web3 !== 'undefined';
         let browser = "https://metamask.io/download.html";
         let isuser = false;
-        let newWeb3 = new Web3(window.web3.currentProvider);
-        const ens = new ENS(window.web3.currentProvider);
-        setInterval(() => {
-            newWeb3.eth.getAccounts().then(accounts => {
-                if (accounts.length !== 0 && accounts[0] !== this.state.address) {
-                    isuser = true;
-                    let userAddress = accounts[0];
-                    ens.reverse(userAddress).name()
-                        .then(response => {
-                            ens.resolver(response).addr()
-                                .then(dir => {
-                                    if (dir === userAddress) {
+        if(typeof window.web3 !=='undefined'){
+            let newWeb3 = new Web3(window.web3.currentProvider);
+            const ens = new ENS(window.web3.currentProvider);
+            window.ethereum.enable()
+                .then(enabled =>{
+                    setInterval(() => {
+                        newWeb3.eth.getAccounts().then(accounts => {
+                            if (accounts.length !== 0 && accounts[0] !== this.state.address) {
+                                isuser = true;
+                                let userAddress = accounts[0];
+                                ens.reverse(userAddress).name()
+                                    .then(response => { 
+                                        ens.resolver(response).addr()
+                                            .then(dir => {
+                                                if (dir === userAddress) {
+                                                    this.setState({
+                                                        isUser: isuser,
+                                                        address: userAddress,
+                                                        domain: response
+                                                    });
+                                                } else {
+                                                    this.setState({
+                                                        isUser: isuser,
+                                                        address: userAddress,
+                                                        domainSubmit: 'nuevo'
+                                                    });
+                                                }
+                                            })
+                                            .catch(error => {
+                                                console.log(error);
+                                                this.setState({
+                                                    isUser: isuser,
+                                                    address: userAddress,
+                                                    domainSubmit: 'nuevo'
+                                                });
+                                            });
+                                    })
+                                    .catch(error => {
+                                        console.log(error);
                                         this.setState({
                                             isUser: isuser,
                                             address: userAddress,
-                                            domain: response
+                                            domainSubmit: 'nuevo'
                                         });
-                                    } else {
-                                        this.setState({
-                                            isUser: isuser,
-                                            address: userAddress,
-                                        });
-                                    }
-                                })
-                                .catch(error => {
-                                    console.log(error);
-                                    this.setState({
-                                        isUser: isuser,
-                                        address: userAddress,
                                     });
-                                });
-                        })
-                        .catch(error => {
-                            console.log(error);
-                            this.setState({
-                                isUser: isuser,
-                                address: userAddress,
-                            });
+
+                            } else if (accounts.length === 0) {
+                                this.setState({
+                                    isUser: false,
+                                })
+                            }
                         });
 
-                } else if (accounts.length === 0) {
-                    this.setState({
-                        isUser: false,
-                    })
-                }
-            });
-
-        }, 100)
+                    }, 100);
+                })
+                .catch(error =>{
+                    this.setState({show2:true});
+                });
+        }
         if (typeof InstallTrigger !== 'undefined') {
             browser = "https://addons.mozilla.org/en-US/firefox/addon/ether-metamask/";
         }
         if (!!window.chrome) {
             browser = "https://chrome.google.com/webstore/detail/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn?hl=en";
-        }
-        if (typeof window.web3 !== 'undefined') {
-
         }
         this.setState({
             isWeb3: isweb3,
@@ -220,7 +230,6 @@ export default class Registrar extends Component {
     }
 
     async registrar(cedula, nombres, apellidos, correo, contrasenia, address) {
-        
         if(this.state.domainSubmit === 'propio'){
             let domain = this.state.domain;
             await axios.post(
@@ -510,6 +519,32 @@ export default class Registrar extends Component {
                         <Modal.Footer>
                             <div className="row">
                                 <CircleToBlockLoading size={35} />
+                            </div>
+                        </Modal.Footer>
+                    </Modal.Body>
+                </Modal>
+                <Modal show={this.state.show2}>
+                    <Modal.Header>
+                        <Modal.Title>Permiso para acceder a tu cuenta</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="row">
+                            <h5>&nbsp;Debes permitirnos conectarnos con MetaMask. Clickea en Conectar como se muestra en la imagen</h5>
+                        </div>
+                        <div className="row">
+                            &nbsp;
+                </div>
+                        <div className="row">
+                            &nbsp;
+                </div>
+                        <Modal.Footer>
+                            <div className="row">
+                                <img src="https://i.ibb.co/Xtn30Kv/1.png" alt="Aceptar permisos"/>
+                            </div>
+                            <div className="row">
+                                <Button className="but-solid" onClick={() =>{this.setState({show2:false}); window.location.reload()}}>
+                                    Aceptar
+                                </Button>
                             </div>
                         </Modal.Footer>
                     </Modal.Body>
