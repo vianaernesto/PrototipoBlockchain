@@ -55,6 +55,7 @@ export default class Registrar extends Component {
             show2: false,
             domain: '',
             domainSubmit: 'propio',
+            modalState: 'subdominio',
         }
 
         this.handleCedula = this.handleCedula.bind(this);
@@ -65,24 +66,27 @@ export default class Registrar extends Component {
         this.handleDomain = this.handleDomain.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.confirmarENS = this.confirmarENS.bind(this);
+        this.renderModal = this.renderModal.bind(this);
+        this.waitForTxToBeMined = this.waitForTxToBeMined.bind(this);
+        this.getConfirmation = this.getConfirmation.bind(this);
     }
 
     componentDidMount() {
         let isweb3 = typeof window.web3 !== 'undefined';
         let browser = "https://metamask.io/download.html";
         let isuser = false;
-        if(typeof window.web3 !=='undefined'){
+        if (typeof window.web3 !== 'undefined') {
             let newWeb3 = new Web3(window.web3.currentProvider);
             const ens = new ENS(window.web3.currentProvider);
             window.ethereum.enable()
-                .then(enabled =>{
+                .then(enabled => {
                     setInterval(() => {
                         newWeb3.eth.getAccounts().then(accounts => {
                             if (accounts.length !== 0 && accounts[0] !== this.state.address) {
                                 isuser = true;
                                 let userAddress = accounts[0];
                                 ens.reverse(userAddress).name()
-                                    .then(response => { 
+                                    .then(response => {
                                         ens.resolver(response).addr()
                                             .then(dir => {
                                                 if (dir === userAddress) {
@@ -126,8 +130,8 @@ export default class Registrar extends Component {
 
                     }, 100);
                 })
-                .catch(error =>{
-                    this.setState({show2:true});
+                .catch(error => {
+                    this.setState({ show2: true });
                 });
         }
         if (typeof InstallTrigger !== 'undefined') {
@@ -230,7 +234,7 @@ export default class Registrar extends Component {
     }
 
     async registrar(cedula, nombres, apellidos, correo, contrasenia, address) {
-        if(this.state.domainSubmit === 'propio'){
+        if (this.state.domainSubmit === 'propio') {
             let domain = this.state.domain;
             await axios.post(
                 '/users',
@@ -242,7 +246,7 @@ export default class Registrar extends Component {
                     "contrasenia": contrasenia,
                     "address": address,
                     "domain": domain,
-                    "propio" : true,
+                    "propio": true,
                 },
                 {
                     headers: { 'Content-Type': 'application/json' }
@@ -262,7 +266,7 @@ export default class Registrar extends Component {
                     });
                 }
             });
-        }else{
+        } else {
             let nombreCompleto = `${nombres}${apellidos}`;
             let nombreLower = nombreCompleto.toLowerCase();
             let nombreArray = nombreLower.split(" ");
@@ -302,7 +306,7 @@ export default class Registrar extends Component {
                 }
             });
         }
-        
+
 
     }
 
@@ -314,17 +318,26 @@ export default class Registrar extends Component {
         const ens = new ENS(window.web3.currentProvider);
         ens.owner(`${subdomain}.pagaresvirtuales.test`).then(res => {
             if (res !== '0x0000000000000000000000000000000000000000') {
+                this.setState({
+                    modalState: 'resolver',
+                });
                 ens.setResolver(`${subdomain}.pagaresvirtuales.test`, '0x42D63ae25990889E35F215bC95884039Ba354115', { from: address })
                     .then(responseResolver => {
+                        this.setState({
+                            modalState: 'address',
+                        });
                         ens.resolver(`${subdomain}.pagaresvirtuales.test`).setAddr(address, { from: address })
                             .then(responseAddress => {
+                                this.setState({
+                                    modalState: 'name',
+                                });
                                 const eth = new Eth(window.web3.currentProvider);
                                 const contract = new EthContract(eth);
                                 const MiniToken = contract(abi2);
                                 const miniToken = MiniToken.at(address2);
                                 miniToken.setName(`${subdomain}.pagaresvirtuales.test`, { from: address })
                                     .then(response => {
-                                        this.props.history.push('/login');
+                                        this.waitForTxToBeMined(response);
                                     }).catch(error => {
                                         console.log(error);
                                     });
@@ -343,6 +356,32 @@ export default class Registrar extends Component {
         }).catch(err => console.log);
 
 
+    }
+
+    waitForTxToBeMined(txHash) {
+        var self = this;
+        setTimeout(function () {
+            self.getConfirmation(txHash);
+        }, 10000);
+    }
+
+    getConfirmation(txHash) {
+        let eth = window.web3.eth;
+        var self = this;
+        let txReceipt;
+        eth.getTransactionReceipt(txHash, function (error, result) {
+            if (!error) {
+                txReceipt = result;
+                console.log(txReceipt);
+                if (txReceipt != null) {
+                    self.props.history.push('/login');
+                } else {
+                    self.waitForTxToBeMined(txHash);
+                }
+            }
+            else
+                console.error(error);
+        });
     }
 
     handleSubmit(event) {
@@ -368,6 +407,112 @@ export default class Registrar extends Component {
         }
     }
 
+    renderModal(state) {
+        if (state == 'subdominio') {
+            return (
+                <React.Fragment>
+                    <Modal.Header>
+                        <Modal.Title>Creando cuenta</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="row">
+                            <h6>&nbsp;Se está creando una cuenta con nombre de dominio, esperando confirmación.</h6>
+                        </div>
+                        <div className="row">
+                            &nbsp;
+                    </div>
+                        <div className="row">
+                            &nbsp;
+                    </div>
+                        <Modal.Footer>
+                            <div className="row">
+                                <CircleToBlockLoading size={35} />
+                            </div>
+                        </Modal.Footer>
+                    </Modal.Body>
+                </React.Fragment>
+            );
+        } else if (state == 'resolver') {
+            return (
+                <React.Fragment>
+                    <Modal.Header>
+                        <Modal.Title>Asociando Resolver</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="row">
+                            <h6>&nbsp;Se está asociando un resolver, permanece atento a avisos o notificaciones de MetaMask</h6>
+                        </div>
+                        <div className="row">
+                            <div className="col-md-3"></div>
+                            <div className="col-md-6"><img src="https://i.ibb.co/dk2W2Xh/2.png" alt="Notificaciones" /></div>
+                            <div className="col-md-3"><CircleToBlockLoading size={35} /></div>
+                        </div>
+                        <div className="row">
+                            <h6>&nbsp;Cuando se le solicite, clickee como se muestra en la imagen</h6>
+                        </div>
+                        <div className="row">
+                            <div className="col-md-3"></div>
+                            <div className="col-md-6"><img src="https://i.ibb.co/0m2pnNS/1.png" alt="Resolver" height='380' /></div>
+                            <div className="col-md-3"></div>
+                        </div>
+                    </Modal.Body>
+                </React.Fragment>
+            )
+        } else if (state == 'address') {
+            return (
+                <React.Fragment>
+                    <Modal.Header>
+                        <Modal.Title>Asociando Dirección</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="row">
+                            <h6>&nbsp;Se está asociando tu dirección, permanece atento a avisos o notificaciones de MetaMask</h6>
+                        </div>
+                        <div className="row">
+                            <div className="col-md-3"></div>
+                            <div className="col-md-6"><img src="https://i.ibb.co/dk2W2Xh/2.png" alt="Notificaciones" /></div>
+                            <div className="col-md-3"><CircleToBlockLoading size={35} /></div>
+                        </div>
+                        <div className="row">
+                            <h6>&nbsp;Cuando se le solicite, clickee como se muestra en la imagen</h6>
+                        </div>
+                        <div className="row">
+                            <div className="col-md-3"></div>
+                            <div className="col-md-6"> <img src="https://i.ibb.co/yR02xbN/3.png" alt="Dirección" height='380' /></div>
+                            <div className="col-md-3"></div>
+                        </div>
+                    </Modal.Body>
+                </React.Fragment>
+            );
+        } else if (state == 'name') {
+            return (
+                <React.Fragment>
+                    <Modal.Header>
+                        <Modal.Title>Asociando Nombre</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="row">
+                            <h6>&nbsp;Se está asociando tu nombre a tu dirección, permanece atento a avisos o notificaciones de MetaMask</h6>
+                        </div>
+                        <div className="row">
+                            <div className="col-md-3"></div>
+                            <div className="col-md-6"><img src="https://i.ibb.co/dk2W2Xh/2.png" alt="Notificaciones" /></div>
+                            <div className="col-md-3"><CircleToBlockLoading size={35} /></div>
+                        </div>
+                        <div className="row">
+                            <h6>&nbsp;Cuando se le solicite, clickee como se muestra en la imagen</h6>
+                        </div>
+                        <div className="row">
+                            <div className="col-md-3"></div>
+                            <div className="col-md-6"><img src="https://i.ibb.co/SPJGdV8/4.png" alt="Nombre" height='380' /></div>
+                            <div className="col-md-3"></div>
+                        </div>
+                    </Modal.Body>
+                </React.Fragment>
+            );
+        }
+
+    }
 
 
     render() {
@@ -503,25 +648,7 @@ export default class Registrar extends Component {
                         </React.Fragment>}
                 </div>
                 <Modal show={this.state.show}>
-                    <Modal.Header>
-                        <Modal.Title>Creando cuenta</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                        <div className="row">
-                            <h6>&nbsp;Se está creando una cuenta con nombre de dominio, esperando confirmación.</h6>
-                        </div>
-                        <div className="row">
-                            &nbsp;
-                </div>
-                        <div className="row">
-                            &nbsp;
-                </div>
-                        <Modal.Footer>
-                            <div className="row">
-                                <CircleToBlockLoading size={35} />
-                            </div>
-                        </Modal.Footer>
-                    </Modal.Body>
+                    {this.renderModal(this.state.modalState)}
                 </Modal>
                 <Modal show={this.state.show2}>
                     <Modal.Header>
@@ -539,10 +666,10 @@ export default class Registrar extends Component {
                 </div>
                         <Modal.Footer>
                             <div className="row">
-                                <img src="https://i.ibb.co/Xtn30Kv/1.png" alt="Aceptar permisos"/>
+                                <img src="https://i.ibb.co/Xtn30Kv/1.png" alt="Aceptar permisos" />
                             </div>
                             <div className="row">
-                                <Button className="but-solid" onClick={() =>{this.setState({show2:false}); window.location.reload()}}>
+                                <Button className="but-solid" onClick={() => { this.setState({ show2: false }); window.location.reload() }}>
                                     Aceptar
                                 </Button>
                             </div>
