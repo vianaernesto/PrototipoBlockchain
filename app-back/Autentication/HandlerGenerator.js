@@ -68,21 +68,18 @@ class HandlerGenerator {
         let apellidos = req.body.apellidos;
         let correo = req.body.correo;
         let address = req.body.address;
-        let subdomain = req.body.subdomain;
+        let domain = req.body.domain;
+        let propio = req.body.propio;
         
 
         if(cedula && contrasenia && nombres && apellidos && cedula && correo && address) { 
-            const ens = {
-                subdomain : subdomain,
-                owner : address,
-            }
             contrasenia = security.encriptar(contrasenia);
             security.verificarUsuario(cedula, contrasenia)
                 .then(doc => {
                     if(!doc){
                         conn.then(client => {
                             client.db().collection(config.USUARIOS).insertOne(
-                                {cedula : cedula, contrasenia: contrasenia, nombres : nombres, apellidos: apellidos, cedula: cedula, correo: correo, address: address, subdomain:subdomain},
+                                {cedula : cedula, contrasenia: contrasenia, nombres : nombres, apellidos: apellidos, cedula: cedula, correo: correo, address: address, domain:domain},
                                 (err, r) =>{
                                     if(err){
                                         res.status(200).json({
@@ -91,13 +88,20 @@ class HandlerGenerator {
                                         });
                                     }
                                     else {
-                                        axios.post(
-                                            `${ip}:${port}/ens`,
-                                            ens,
-                                        )
-                                        .catch(err =>{
-                                            res.status(500).json({message: err.message});
-                                        });
+                                        if(!propio){
+                                            console.log(domain.split('.')[0]);
+                                            const ens = {
+                                                subdomain : domain.split('.')[0],
+                                                owner : address,
+                                            }
+                                            axios.post(
+                                                `${ip}:${port}/ens`,
+                                                ens,
+                                            )
+                                            .catch(err =>{
+                                                res.status(500).json({message: err.message});
+                                            });
+                                        }
                                         res.status(200).json({
                                             success: true,
                                             message: 'Succesfully created new user',
