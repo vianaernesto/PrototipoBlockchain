@@ -408,7 +408,7 @@ export default class Registrar extends Component {
     }
 
     renderModal(state) {
-        if (state == 'subdominio') {
+        if (state === 'subdominio') {
             return (
                 <React.Fragment>
                     <Modal.Header>
@@ -432,7 +432,7 @@ export default class Registrar extends Component {
                     </Modal.Body>
                 </React.Fragment>
             );
-        } else if (state == 'resolver') {
+        } else if (state === 'resolver') {
             return (
                 <React.Fragment>
                     <Modal.Header>
@@ -458,7 +458,7 @@ export default class Registrar extends Component {
                     </Modal.Body>
                 </React.Fragment>
             )
-        } else if (state == 'address') {
+        } else if (state === 'address') {
             return (
                 <React.Fragment>
                     <Modal.Header>
@@ -484,7 +484,7 @@ export default class Registrar extends Component {
                     </Modal.Body>
                 </React.Fragment>
             );
-        } else if (state == 'name') {
+        } else if (state === 'name') {
             return (
                 <React.Fragment>
                     <Modal.Header>
