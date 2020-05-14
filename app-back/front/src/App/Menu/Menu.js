@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Link } from "react-router-dom";
+import { EscenarioContext } from '../Context/context';
 
 import './Menu.css'
 import imagen from '../../assets/user.png';
@@ -7,18 +8,33 @@ import imagen from '../../assets/user.png';
 export default class Navbar extends Component {
     constructor(props) {
         super(props);
-
         this.logout = this.logout.bind(this);
     }
 
-    logout(){
+    logout() {
         this.props.removeUsuario();
     }
 
     listarEnlaces() {
-        if(this.props.getUsuario()) {
+        if (this.props.getUsuario()) {
             return (
                 <ul className="navbar-nav ml-0 align-items-end">
+                    <li className="nav-item dropdown ml-5">
+                        <EscenarioContext.Consumer>
+                            {({ escenario,toggleSimple, toggleENS, toggleEther }) => (
+                                <React.Fragment>
+                                    <div className="but-solid" id="dropEscenario" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        {`Escenario: ${escenario}`}
+                                            </div>
+                                    <div className="dropdown-menu dropdown-menu-sm-right" aria-labelledby="dropEscenario">
+                                        <button className="dropdown-item" onClick={toggleSimple}>Escenario Simple</button>
+                                        <button className="dropdown-item" onClick={toggleENS}>Escenario con ENS</button>
+                                        <button className="dropdown-item" onClick={toggleEther}>Escenario con Ether</button>
+                                    </div>
+                                </React.Fragment>
+                            )}
+                        </EscenarioContext.Consumer>
+                    </li>
                     <li className="nav-item mx-md-2">
                         <Link to="/balance" className="nav-link">
                             Balance
@@ -43,7 +59,7 @@ export default class Navbar extends Component {
     }
 
     revisarLogin() {
-        if(this.props.getUsuario()) {
+        if (this.props.getUsuario()) {
             return (
                 <li className="nav-item dropdown ml-5">
                     <div id="drop" role="button" tabIndex="0" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

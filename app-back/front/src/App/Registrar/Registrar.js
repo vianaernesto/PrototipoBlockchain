@@ -372,7 +372,6 @@ export default class Registrar extends Component {
         eth.getTransactionReceipt(txHash, function (error, result) {
             if (!error) {
                 txReceipt = result;
-                console.log(txReceipt);
                 if (txReceipt != null) {
                     self.props.history.push('/login');
                 } else {

@@ -1,14 +1,13 @@
 import React, { Component } from "react";
 import { Link } from 'react-router-dom';
-
+import {EscenarioContext} from '../Context/context';
 
 import contract from '../../assets/contract.png';
 
 
 class Home extends Component {
-
+    
     revisarUsuario(){
-
         let direccion = this.props.getUsuario() ? '/balance' : '/login';
 
         return (
@@ -40,5 +39,7 @@ class Home extends Component {
          );
     }
 }
+
+Home.contextType = EscenarioContext;
  
 export default Home;
