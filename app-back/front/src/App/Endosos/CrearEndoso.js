@@ -69,7 +69,7 @@ class CrearEndoso extends Component {
                     this.setUpPDF(pagare, endoso, response.data);
                 });
             let endoso = this.props.location.state.endoso;
-            console.log(endoso)
+            console.log(this.props.location.state)
             if (endoso === undefined) {
                 this.setState({
                     _id: "",
