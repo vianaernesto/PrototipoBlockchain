@@ -161,7 +161,7 @@ class PagareDetail extends Component {
                     ?   <div className="row">
                             <div className="col-md-2 col-2 col-lg-2"></div>
                             <div className="col-md-6 col-6 col-lg-6">
-                                <Link to ={{pathname: '/endoso/crear/', state: {pagare : this.props.location.state.pagare, usuario: {nombre: this.state.nombre, cedula:this.state.cedulaUsuario}}}}><button className={`but-solid`}>Endosar Pagaré</button></Link>
+                                <Link to ={{pathname: '/endoso/crear/', state: {pagare : this.props.location.state.pagare, endoso:this.state.endosos[0], usuario: {nombre: this.state.nombre, cedula:this.state.cedulaUsuario}}}}><button className={`but-solid`}>Endosar Pagaré</button></Link>
                             </div>
                             <div className="col-md-4 col-4 col-lg-4"></div>
                         </div>
@@ -184,7 +184,7 @@ class PagareDetail extends Component {
                 ?   <div className="row">
                         <div className="col-md-2 col-2 col-lg-2"></div>
                         <div className="col-md-6 col-6 col-lg-6">
-                            <Link to ={{pathname: '/endoso/crear/', state: {pagare : this.props.location.state.pagare, usuario: {nombre: this.state.nombre, cedula:this.state.cedulaUsuario}}}}><button className={`but-solid`}>Endosar Pagaré</button></Link>
+                            <Link to ={{pathname: '/endoso/crear/', state: {pagare : this.props.location.state.pagare,endoso:this.state.endosos[0], usuario: {nombre: this.state.nombre, cedula:this.state.cedulaUsuario}}}}><button className={`but-solid`}>Endosar Pagaré</button></Link>
                         </div>
                         <div className="col-md-4 col-4 col-lg-4"></div>
                     </div>
