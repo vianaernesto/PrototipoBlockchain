@@ -23,7 +23,6 @@ Connection.db = null;
 Connection.url= "mongodb+srv://monitoring_user:G6QiBEoDMPSytWWK@prototipo-lzjj3.mongodb.net/test";
 Connection.options = {
     bufferMaxEntries:   0,
-    reconnectTries:     5000,
     useNewUrlParser:    true,
     useUnifiedTopology: true
 };

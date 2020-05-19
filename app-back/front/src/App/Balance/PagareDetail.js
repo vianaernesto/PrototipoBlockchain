@@ -44,7 +44,7 @@ class PagareDetail extends Component {
                 })
             }
             if(pagare.ultimoEndoso !== null){
-                axios.get(`endosos/pagare/${pagare._id}`,{headers : {"Content-Type" : "application/json"}})
+                axios.get(`/endosos/pagare/${pagare._id}`,{headers : {"Content-Type" : "application/json"}})
                     .then(response =>{
                         let data = response.data;
                         this.setState({
@@ -96,13 +96,14 @@ class PagareDetail extends Component {
         doc.setFontSize(15);
         doc.text(10,25, `Pagaré No.  ${pagare._id}`);
         doc.setFontSize(12);
-        doc.text(10,35, `Yo ${pagare.nombreDeudor} idenficado con la cedula de ciudadanía ${pagare.idDeudor} me obligo a pagar`);
-        doc.text(10,42, `solidaria e incondicionalmente a favor de ${pagare.nombreAcreedor} o de quien represente sus derechos`);
-        doc.text(10,49, `o al tenedor legitimo del presente titulo valor en la ciudad de ${pagare.lugarCreacion} la suma de`);
-        doc.text(10,56, `${pagare.valor} pesos moneda corriente el día ${dia} del mes de ${mes} del ${anio}. `)
-        doc.text(10,70, `Autorizo irrevocablemente a ${pagare.nombreAcreedor} o a quien represente sus derechos`)
-        doc.text(10,77, `o al tenedor legítimo del presente título valor para declarar el plazo vencido el presente`)
-        doc.text(10,84, `pagaré y que para tal evento proceda inmediatamente.`)
+        doc.text(10,35, `Yo ${pagare.nombreDeudor} idenficado con la cedula de ciudadanía ${pagare.idDeudor} me obligo `);
+        doc.text(10,42, `a pagar solidaria e incondicionalmente a favor de ${pagare.nombreAcreedor}`);
+        doc.text(10,49, 'o de quien represente sus derechos')
+        doc.text(10,56, `o al tenedor legitimo del presente titulo valor en la ciudad de ${pagare.lugarCreacion} la suma de`);
+        doc.text(10,63, `${pagare.valor} pesos moneda corriente el día ${dia} del mes de ${mes} del ${anio}. `)
+        doc.text(10,77, `Autorizo irrevocablemente a ${pagare.nombreAcreedor} o a quien represente sus derechos`)
+        doc.text(10,84, `o al tenedor legítimo del presente título valor para declarar el plazo vencido el presente`)
+        doc.text(10,91, `pagaré y que para tal evento proceda inmediatamente.`)
         doc.text(10,260,`Firma: ${pagare.firma}`)
         doc.text(10,270,`Cedula: ${pagare.idDeudor}`)
         const pdf = doc.output('datauristring');
@@ -152,7 +153,7 @@ class PagareDetail extends Component {
     
 
     render() { 
-        if(this.state.endosos.length ===0){
+        if(this.state.endosos.length ===0 || (this.state.endosos.length === 1 && this.state.endosos[0].etapa <3)){
             return (
                 <div className="content-body host">
                     {this.redirect()}
@@ -207,10 +208,6 @@ class PagareDetail extends Component {
                                                         {x.es_ultimo_endoso ? <span className="badge badge-success">Último Endoso</span> : <span></span>}</h6>
                                                     </a>                
                                                 </div>
-                                            )
-                                        } else{
-                                            return(
-                                                <div key={i}></div>
                                             )
                                         }
                                     })}

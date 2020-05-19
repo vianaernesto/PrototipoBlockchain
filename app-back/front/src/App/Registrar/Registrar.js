@@ -266,7 +266,40 @@ export default class Registrar extends Component {
                     });
                 }
             });
-        } else {
+        } else if(this.context.escenario !== 'ENS'){
+            let domain = this.state.domain;
+            await axios.post(
+                '/users',
+                {
+                    "cedula": cedula,
+                    "nombres": nombres,
+                    "apellidos": apellidos,
+                    "correo": correo,
+                    "contrasenia": contrasenia,
+                    "address": address,
+                    "domain": 'NA',
+                    "propio": false,
+                },
+                {
+                    headers: { 'Content-Type': 'application/json' }
+                }
+            ).then(response => {
+                if (response.data.success) {
+                    this.props.history.push('/login');
+                }
+                else {
+                    this.setState({
+                        cedula: this.state.cedula,
+                        nombres: this.state.nombres,
+                        apellidos: this.state.apellidos,
+                        correo: this.state.correo,
+                        contrasenia: this.state.contrasenia,
+                        errors: true
+                    });
+                }
+            });
+        }
+        else {
             let nombreCompleto = `${nombres}${apellidos}`;
             let nombreLower = nombreCompleto.toLowerCase();
             let nombreArray = nombreLower.split(" ");
@@ -600,7 +633,7 @@ export default class Registrar extends Component {
                                                                 {errores.contrasenia.length > 0 &&
                                                                     <span className='error'>{errores.contrasenia}</span>}
                                                             </Form.Group>
-                                                            {this.state.domain !== ''
+                                                            {this.state.domain !== '' && this.context.escenario === 'ENS'
                                                                 ? <Form.Group>
                                                                     <Form.Label htmlFor="domain">Escoja su dominio para el servicio de nombres de Ethereum *:</Form.Label>
                                                                     <Form.Check onChange={this.handleChange}>

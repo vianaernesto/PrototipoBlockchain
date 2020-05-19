@@ -52,6 +52,22 @@ export default class Navbar extends Component {
         else {
             return (
                 <ul className="navbar-nav ml-0 align-items-end">
+                    <li className="nav-item dropdown ml-5">
+                        <EscenarioContext.Consumer>
+                            {({ escenario,toggleSimple, toggleENS, toggleEther }) => (
+                                <React.Fragment>
+                                    <div className="but-solid" id="dropEscenario" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        {`Escenario: ${escenario}`}
+                                            </div>
+                                    <div className="dropdown-menu dropdown-menu-sm-right" aria-labelledby="dropEscenario">
+                                        <button className="dropdown-item" onClick={toggleSimple}>Escenario Simple</button>
+                                        <button className="dropdown-item" onClick={toggleENS}>Escenario con ENS</button>
+                                        <button className="dropdown-item" onClick={toggleEther}>Escenario con Ether</button>
+                                    </div>
+                                </React.Fragment>
+                            )}
+                        </EscenarioContext.Consumer>
+                    </li>
                     {this.revisarLogin()}
                 </ul>
             );
@@ -66,6 +82,9 @@ export default class Navbar extends Component {
                         <img className="rounded-circle profilePic" src={imagen} width="45" height="45" alt="Imagen de perfil" />
                     </div>
                     <div className="dropdown-menu dropdown-menu-sm-right" aria-labelledby="drop">
+                        <h4>{this.props.getUsuario().nombres}</h4>
+                        <h4>{this.props.getUsuario().apellidos}</h4>
+                        <h4>{`Cedula: ${this.props.getUsuario().cedula}`}</h4>
                         <Link className="dropdown-item" to="/" onClick={this.logout}>Cerrar sesión</Link>
                     </div>
                 </li>

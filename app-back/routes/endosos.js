@@ -53,10 +53,15 @@ router.post("/pagare/:id/etapa1", (req, res) =>{
              }
          }
      ).then(response =>{
-         res.status(201).send(response.data);
+         res.status(200).send(response.data);
      })
      .catch(err =>{
-         res.status(500).json({message: err.message});
+         if(err.response.status === 401){
+             res.status(401).json(err.data);
+         }else{
+            res.status(500).json({message: err});
+         }
+         
      });
 });
 
