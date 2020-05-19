@@ -69,8 +69,29 @@ class CrearEndoso extends Component {
                     this.setUpPDF(pagare, endoso, response.data);
                 });
             let endoso = this.props.location.state.endoso;
-            console.log(this.props.location.state)
-            if (endoso === undefined) {
+            let endoso2 = this.props.location.state.endoso2;
+            if(endoso2 !== undefined){
+                this.setState({
+                    _id:"",
+                    codigo_retiro: "",
+                    confirmacion_transaccion:"",
+                    es_ultimo_endoso: null,
+                    etapa: 0,
+                    fecha: "",
+                    firma: "",
+                    hash_transaccion: "",
+                    id_anterior_endoso: "",
+                    id_endosante: endoso.id_endosatario,
+                    id_endosatario: 0,
+                    id_pagare: endoso.id_pagare,
+                    nombre_endosante: endoso.nombre_endosatario,
+                    nombre_endosatario:"",
+                    redirect: false,
+                    isSame: false,
+                    isContrasenia: false,
+                });
+            }
+            else if (endoso === undefined) {
                 this.setState({
                     _id: "",
                     codigo_retiro: "",
