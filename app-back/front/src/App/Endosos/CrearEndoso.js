@@ -163,7 +163,6 @@ class CrearEndoso extends Component {
         doc.addPage();
         for (let x in endososPasados) {
             if(endososPasados[x]._id !== this.state._id){
-                doc.text(10, 20 + counter, )
                 doc.text(10, 25 + counter, `Endosante: ${endososPasados[x].nombre_endosante}`)
                 doc.text(10, 32 + counter, `Cedula Endosante: ${endososPasados[x].id_endosante}`)
                 doc.text(10, 39 + counter, `Endosatario: ${endososPasados[x].nombre_endosatario}`)
