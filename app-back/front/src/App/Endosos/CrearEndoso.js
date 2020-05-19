@@ -167,7 +167,7 @@ class CrearEndoso extends Component {
                 doc.text(10, 32 + counter, `Cedula Endosante: ${endososPasados[x].id_endosante}`)
                 doc.text(10, 39 + counter, `Endosatario: ${endososPasados[x].nombre_endosatario}`)
                 doc.text(10, 46 + counter, `Cedula Endosatario: ${endososPasados[x].id_endosatario}`)
-                doc.text(10, 53 + counter, `Fecha Endoso: ${endososPasados[x].date.toDate()}/${endososPasados[x].date.getMonth()+1}/${endososPasados[x].date.getFullYear()}`)
+                doc.text(10, 53 + counter, `Fecha Endoso: ${endososPasados[x].fecha.toDate()}/${endososPasados[x].fecha.getMonth()+1}/${endososPasados[x].fecha.getFullYear()}`)
                 doc.text(10, 53 + counter, `Firma: ${endososPasados[x].firma}`)
                 counter += 60;
             }
