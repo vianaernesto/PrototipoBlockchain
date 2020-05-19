@@ -69,6 +69,7 @@ class CrearEndoso extends Component {
                     this.setUpPDF(pagare, endoso, response.data);
                 });
             let endoso = this.props.location.state.endoso;
+            console.log(endoso)
             if (endoso === undefined) {
                 this.setState({
                     _id: "",
@@ -167,8 +168,8 @@ class CrearEndoso extends Component {
                 doc.text(10, 32 + counter, `Cedula Endosante: ${endososPasados[x].id_endosante}`)
                 doc.text(10, 39 + counter, `Endosatario: ${endososPasados[x].nombre_endosatario}`)
                 doc.text(10, 46 + counter, `Cedula Endosatario: ${endososPasados[x].id_endosatario}`)
-                doc.text(10, 53 + counter, `Fecha Endoso: ${endososPasados[x].fechaCreacion.toDate()}/${endososPasados[x].fechaCreacion.getMonth()+1}/${endososPasados[x].fechaCreacion.getFullYear()}`)
-                doc.text(10, 53 + counter, `Firma: ${endososPasados[x].firma}`)
+                doc.text(10, 53 + counter, `Fecha Endoso: ${dia}/${mes}/${anio}`)
+                doc.text(10, 60 + counter, `Firma: ${endososPasados[x].firma}`)
                 counter += 60;
             }
         }
