@@ -570,7 +570,6 @@ class CrearEndoso extends Component {
             let pagare = `${this.state.id_pagare}`;
             let firma = "N/A";
             let idEndoso = `${this.state._id}`;
-            console.log(miniToken);
             miniToken.endosarPagare(endosante, endosatario,pagare,fechaString,firma, idEndoso, {from: account})
                 .then((txHash)=>{
                     this.waitForTxToBeMined(txHash);
@@ -604,8 +603,8 @@ class CrearEndoso extends Component {
             if (!error) {
                 txReceipt = result;
                 if (txReceipt != null) {
-                    axios.patch(
-                        `/endosos/pagare/${this.state.id_pagare}/etapa3`,
+                    axios.post(
+                        `/endosos/pagare/${self.state.id_pagare}/etapa3`,
                         data,
                         {
                             headers: {
@@ -613,7 +612,7 @@ class CrearEndoso extends Component {
                             }
                         }
                     ).then(response => {
-                        this.setState({
+                        self.setState({
                             isContrasenia: false,
                             redirect: true,
                         });
@@ -650,7 +649,7 @@ class CrearEndoso extends Component {
                                     <form>
                                         <div className="form-group">
                                             <label htmlFor="contrasenia">Digite su contraseña para poder firmar:</label>
-                                            <input name="contrasenia" type="password" onChange={this.handleChangeContrasenia} className="form-control" id="contrasenia" placeholder="Contrasenia" disabled={this.isDisabled(2, 'input')} />
+                                            <input name="contrasenia" type="password" onChange={this.handleChangeContrasenia} className="form-control" id="contrasenia" placeholder="Contraseña" disabled={this.isDisabled(2, 'input')} />
                                         </div>
                                         <button name="firmar" type="submit" className="btn btn-success" onClick={this.handleEtapa3} disabled={!this.state.isContrasenia} >Firmar</button>
                                     </form>

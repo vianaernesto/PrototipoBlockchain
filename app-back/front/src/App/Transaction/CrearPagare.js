@@ -640,7 +640,9 @@ class CrearPagare extends Component {
                 this.waitForTxToBeMined(txHash);
 
             }).catch(error => {
-                console.log(error);
+                this.setState({
+                    show2: true,
+                });
             });
         }
         
