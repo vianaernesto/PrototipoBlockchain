@@ -3,8 +3,10 @@ import {Redirect, Link} from 'react-router-dom';
 import axios from "axios";
 import jsPDF from 'jspdf';
 import $ from 'jquery';
+import QRCode from 'qrcode'
 
 import './PagareDetail.css';
+import JumpCircleLoading from "react-loadingg/lib/JumpCircleLoading";
 
 class PagareDetail extends Component {
     constructor(props) {
@@ -87,7 +89,7 @@ class PagareDetail extends Component {
         }
     }
 
-    setUpPDF(pagare){
+    async setUpPDF(pagare){
         let creacion = new Date(pagare.fechaCreacion)
         let dia = creacion.getDate().toString();
         let mes = creacion.getMonth().toString();
@@ -106,6 +108,16 @@ class PagareDetail extends Component {
         doc.text(10,91, `pagaré y que para tal evento proceda inmediatamente.`)
         doc.text(10,260,`Firma: ${pagare.firma}`)
         doc.text(10,270,`Cedula: ${pagare.idDeudor}`)
+        var urlString = 'https://ropsten.etherscan.io/tx/' + pagare.firma
+        var canvas = await QRCode.toCanvas(urlString)
+        console.log("asaaa")
+        var myImage = canvas.toDataURL("image/jpeg,1.0");
+        var imgWidth = (canvas.width * 20) / 240;
+        var imgHeight = (canvas.height * 20) / 240; 
+        // jspdf changes
+        doc.addImage(myImage, 'JPEG', 10, 100, imgWidth*4, imgHeight*4);
+
+        // doc.addImage(dataUrl, 10, 280);
         const pdf = doc.output('datauristring');
         this.setState({
             pdf:pdf,
