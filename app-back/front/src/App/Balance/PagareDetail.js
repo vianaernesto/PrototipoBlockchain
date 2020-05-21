@@ -4,6 +4,8 @@ import axios from "axios";
 import jsPDF from 'jspdf';
 import $ from 'jquery';
 import QRCode from 'qrcode'
+import {Col, Row, Nav, Tab, NavItem, NavLink, TabContent, TabPane} from 'react-bootstrap';
+
 
 import './PagareDetail.css';
 import JumpCircleLoading from "react-loadingg/lib/JumpCircleLoading";
@@ -34,7 +36,6 @@ class PagareDetail extends Component {
         this.renderPDF = this.renderPDF.bind(this);
         this.redirect = this.redirect.bind(this);
         this.setUpPDF = this.setUpPDF.bind(this);
-        this.changeEndoso = this.changeEndoso.bind(this);
     }
 
     componentDidMount(){
@@ -48,25 +49,54 @@ class PagareDetail extends Component {
             if(pagare.ultimoEndoso !== null){
                 axios.get(`/endosos/pagare/${pagare._id}`,{headers : {"Content-Type" : "application/json"}})
                     .then(response =>{
-                        let data = response.data;
-                        this.setState({
-                            id : pagare._id,
-                            codigoRetiro: pagare.codigoRetiro,
-                            fechaCreacion : pagare.fechaCreacion,
-                            fechaExpiracion : pagare.fechaExpiracion,
-                            fechaVencimiento : pagare.fechaVencimiento,
-                            firma : pagare.firma,
-                            idAcreedor : pagare.idAcreedor,
-                            idDeudor : pagare.idDeudor,
-                            lugarCumplimiento : pagare.pendiente ? "": pagare.lugarCumplimiento,
-                            nombreAcreedor : pagare.nombreAcreedor,
-                            nombreDeudor : pagare.nombreDeudor,
-                            valor : pagare.valor,
-                            endosos : data,
-                            lugarCreacion : pagare.lugarCreacion,
-                        });
+                        let data = response.data.reverse();
+                        let found = false;
+                        let endosoFinal = {};
+                        for(let i = 0; i < data.length, !found; i++){
+                            if(data[i].es_ultimo_endoso){
+                                endosoFinal=data[i];
+                                found = true;
+                            }
+                        }
+                        if(endosoFinal.id_endosatario === this.props.location.state.usuario.cedula){
+                            this.setState({
+                                id : pagare._id,
+                                codigoRetiro: pagare.codigoRetiro,
+                                fechaCreacion : pagare.fechaCreacion,
+                                fechaExpiracion : pagare.fechaExpiracion,
+                                fechaVencimiento : pagare.fechaVencimiento,
+                                firma : pagare.firma,
+                                idAcreedor : pagare.idAcreedor,
+                                idDeudor : pagare.idDeudor,
+                                lugarCumplimiento : pagare.pendiente ? "": pagare.lugarCumplimiento,
+                                nombreAcreedor : pagare.nombreAcreedor,
+                                nombreDeudor : pagare.nombreDeudor,
+                                valor : pagare.valor,
+                                endosos : data,
+                                canEndose: true,
+                            });
+                        }else{
+                            this.setState({
+                                id : pagare._id,
+                                codigoRetiro: pagare.codigoRetiro,
+                                fechaCreacion : pagare.fechaCreacion,
+                                fechaExpiracion : pagare.fechaExpiracion,
+                                fechaVencimiento : pagare.fechaVencimiento,
+                                firma : pagare.firma,
+                                idAcreedor : pagare.idAcreedor,
+                                idDeudor : pagare.idDeudor,
+                                lugarCumplimiento : pagare.pendiente ? "": pagare.lugarCumplimiento,
+                                nombreAcreedor : pagare.nombreAcreedor,
+                                nombreDeudor : pagare.nombreDeudor,
+                                valor : pagare.valor,
+                                endosos : data,
+                                lugarCreacion : pagare.lugarCreacion,
+                            });
+                        }
+                        this.setUpPDF(pagare,data);
                     });
             }else{
+                let  data = [];
                 this.setState({
                     id : pagare._id,
                     codigoRetiro: pagare.codigoRetiro,
@@ -80,23 +110,25 @@ class PagareDetail extends Component {
                     nombreAcreedor : pagare.nombreAcreedor,
                     nombreDeudor : pagare.nombreDeudor,
                     valor : pagare.valor,
-                })
+                });
+                this.setUpPDF(pagare,data);
             }
             
-        this.setUpPDF(pagare);
+        
         }else{
             this.setState({redirect:true});
         }
     }
 
-    async setUpPDF(pagare){
+    async setUpPDF(pagare,endososPasados){
         let creacion = new Date(pagare.fechaCreacion)
         let dia = creacion.getDate().toString();
         let mes = creacion.getMonth().toString();
         let anio = creacion.getFullYear().toString();
+        let counter = 0;
         const doc = new jsPDF();
         doc.setFontSize(15);
-        doc.text(10,25, `Pagaré No.  ${pagare._id}`);
+        doc.text(10, 25, `Pagaré No.  ${pagare._id}`);
         doc.setFontSize(12);
         doc.text(10,35, `Yo ${pagare.nombreDeudor} idenficado con la cedula de ciudadanía ${pagare.idDeudor} me obligo `);
         doc.text(10,42, `a pagar solidaria e incondicionalmente a favor de ${pagare.nombreAcreedor}`);
@@ -116,8 +148,24 @@ class PagareDetail extends Component {
         var imgHeight = (canvas.height * 20) / 240; 
         // jspdf changes
         doc.addImage(myImage, 'JPEG', 5, 190, imgWidth*4, imgHeight*4);
-
-        // doc.addImage(dataUrl, 10, 280);
+        doc.addPage();
+        for (let x in endososPasados) {
+            if(counter > 290){
+                doc.addPage();
+                counter = 0;
+            }
+            if(endososPasados[x].etapa === 3){
+                let fecha = new Date(endososPasados[x].fecha);
+                doc.text(10, 25 + counter, `Endosante: ${endososPasados[x].nombre_endosante}`)
+                doc.text(10, 32 + counter, `Cedula Endosante: ${endososPasados[x].id_endosante}`)
+                doc.text(10, 39 + counter, `Endosatario: ${endososPasados[x].nombre_endosatario}`)
+                doc.text(10, 46 + counter, `Cedula Endosatario: ${endososPasados[x].id_endosatario}`)
+                doc.text(10, 53 + counter, `Fecha Endoso: ${fecha.getDate()}/${fecha.getMonth()+1}/${fecha.getFullYear()}`)
+                doc.text(10, 60 + counter, `Firma: ${endososPasados[x].firma}`)
+                counter += 60;
+            }
+                
+        }
         const pdf = doc.output('datauristring');
         this.setState({
             pdf:pdf,
@@ -152,16 +200,6 @@ class PagareDetail extends Component {
             </div>
         )
     }
-    changeEndoso(i,change){
-        if(change === 'previous' && i>0){
-            let j = i+1;
-            $(`#list-${j}`).tab('show');
-        }else if(change === 'next' && i < this.state.endosos.length){
-            let j = i-1;
-            $(`#list-${j}`).tab('show');
-        }
-    }
-
     
 
     render() { 
@@ -209,30 +247,31 @@ class PagareDetail extends Component {
                     </div>
                     <div className="col-md-6 col-6 col-lg-6">
                         <div className="row">
-                            <div className="col-6 col-md-6 col-lg-6">
-                                <div className="list-group" id="list-tab" role="tablist">
+                            <Tab.Container id="endosos-left" defaultActiveKey={`${"0"}`}>
+                            <Row>
+                                <Col sm={6} lg={6}>
+                                    <Nav variant="pills" className="flex-column">
                                     {this.state.endosos.map((x,i) =>{
-                                        if(x.etapa > 2){
-                                            return(
-                                                <div key={i}>
-                                                    <a className={`list-group-item list-group-item-action ${i=== 0 ? 'active' : ''}`} id={`list-${i}-list`} data-toggle='list' href={`#list-${i}`} role="tab" aria-controls={`Endoso ${i}`}>
-                                                    <h6 style={i=== 0 ? {color:"white"} : {color:"black"}}>{`Endosado por: ${x.nombre_endosante} `}
-                                                        {x.es_ultimo_endoso ? <span className="badge badge-success">Último Endoso</span> : <span></span>}</h6>
-                                                    </a>                
-                                                </div>
-                                            )
-                                        }
-                                    })}
-                                </div>
-                            </div>
-                            <div className="col-md-6 col-6 col-lg-6">
-                                <div className="tab-content" id="nav-tabContent">
-                                        {this.state.endosos.map((x,i)=>{
                                             if(x.etapa > 2){
-                                                return (
-                                                    <div key={i}>
-                                                        <div className={`tab pane ${i===0 ? 'active': ''}`} id={`list-${i}`} role="tabpanel" aria-labelledby={`list-${i}-list`} ref={`list${i}`}>
-                                                            <div className="row">
+                                                return(
+                                                    <NavItem>
+                                                        <NavLink eventKey={`${i}`}>
+                                                            <h6 style={{color:"black"}}>{`Endosado por: ${x.nombre_endosante} `}
+                                                                {x.es_ultimo_endoso ? <span className="badge badge-success">Último Endoso</span> : <span></span>}</h6>
+                                                         </NavLink>
+                                                    </NavItem>
+                                                )
+                                            }
+                                        })}
+                                    </Nav>
+                                </Col>
+                                <Col sm={6} lg={6}>
+                                    <TabContent defaultChecked={`${"0"}`}>
+                                    {this.state.endosos.map((x,i)=>{
+                                            if(x.etapa > 2){
+                                                return(
+                                                        <TabPane eventKey={`${i}`}>
+                                                        <div className="row">
                                                                 <div className="col-md-12 col-lg-12">
                                                                     <h6 className="font-weight-bold">
                                                                         Nombre Endosante:
@@ -273,21 +312,14 @@ class PagareDetail extends Component {
                                                                     </h6>
                                                                 </div>
                                                             </div>
-                                                            <div className="row">
-                                                                <div className="col-md-6 col-6 col-lg-6">
-                                                                    <button className="but-solid" disabled={i===0 ? true:false} onClick={this.changeEndoso(i,'previous')}>Anterior</button>
-                                                                </div>
-                                                                <div className="col-md-6 col-6 col-lg-6">
-                                                                <button className="but-solid" disabled={i===this.state.endosos.length-1 ? true:false} onClick={this.changeEndoso(i,'next')}>Siguiente</button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                        </TabPane>
                                                 )
-                                            } 
+                                            }
                                         })}
-                                </div>
-                            </div>
+                                    </TabContent>
+                                </Col>
+                            </Row>
+                            </Tab.Container>
                         </div>
                     </div>
                 </div>

@@ -171,7 +171,6 @@ class Balance extends Component {
                         totalCobro: totalAFavor,
                         totalDeuda: totalEnContra,
                     });
-
                 }));
 
         }
@@ -262,7 +261,7 @@ class Balance extends Component {
                 <div className="row align-items-center justify-content-center">
                     <div className="col-lg-3 col-3 col-md-3"></div>
                     <div className="col-lg-6 col-6 col-md-6">
-                        <Link to={{ pathname: '/pagare/crear/', state: { rol: 'acreedor', escenario: this.context.escenario, usuario: { nombre: this.state.nombre, cedula: this.state.cedulaUsuario } } }}  ><button className="but-solid">Crear Pagaré como Acreedor </button></Link>
+                        <Link to={{ pathname: '/pagare/crear/', state: { rol: 'deudor', escenario: this.context.escenario, usuario: { nombre: this.state.nombre, cedula: this.state.cedulaUsuario } } }}  ><button className="but-solid">Crear Pagaré como Deudor </button></Link>
                     </div>
                     <div className="col-lg-6 col-6 col-md-6"></div>
                 </div>

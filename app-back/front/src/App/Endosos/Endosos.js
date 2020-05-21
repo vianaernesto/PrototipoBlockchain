@@ -23,38 +23,24 @@ class Endosos extends Component {
     }
 
     componentDidMount() {
-        axios.get(`/endosos/endosante/${this.state.cedulaUsuario}`, { headers: this.state.headers })
-            .then(response => {
-                let endososLocal = response.data;
-                for (let x in endososLocal) {
-                    axios.get(`pagares/${endososLocal[x].id_pagare}`, { headers: this.state.headers })
-                        .then(response => {
-                            let pagareLocal = response.data;
-                            endososLocal[x].pagare = pagareLocal;
+        let endososAFavor =  axios.get(`/endosos/endosante/${this.state.cedulaUsuario}`, { headers: this.state.headers });
+        let endososEnContra = axios.get(`/endosos/endosatario/${this.state.cedulaUsuario}`, { headers: this.state.headers });
 
-                            this.setState({
-                                endosos: endososLocal,
-                            });
+        axios.all([endososAFavor,endososEnContra])
+            .then(axios.spread((...responses)=>{
+                let endososObtenidos = responses[0].data.concat(responses[1].data);
+                for(let x in endososObtenidos){
+                    axios.get(`pagares/${endososObtenidos[x].id_pagare}`, { headers: this.state.headers })
+                    .then(response => {
+                        let pagareLocal = response.data;
+                        endososObtenidos[x].pagare = pagareLocal;
+
+                        this.setState({
+                            endosos: endososObtenidos,
                         });
+                    });
                 }
-
-            });
-        axios.get(`/endosos/endosatario/${this.state.cedulaUsuario}`, { headers: this.state.headers })
-            .then(response => {
-                let endososLocal = this.state.endosos.concat(response.data);
-                for (let x in endososLocal) {
-                    axios.get(`pagares/${endososLocal[x].id_pagare}`, { headers: this.state.headers })
-                        .then(response => {
-                            let pagareLocal = response.data;
-                            endososLocal[x].pagare = pagareLocal;
-
-                            this.setState({
-                                endosos: endososLocal,
-                            });
-                        });
-                }
-
-            });
+            }));
     }
 
     etapaLevel(etapa) {
@@ -180,7 +166,7 @@ class Endosos extends Component {
                                                                 <div className="card-body">
                                                                     <div className="row">
                                                                         <div className="col-2"></div>
-                                                                        <div className="col-8"><Link to={{ pathname: '/pagareDetail/', state: { pagare: y.pagare } }}><button className={`but-solid`}>Ver Pagaré Asociado</button></Link></div>
+                                                                        <div className="col-8"><Link to={{ pathname: '/pagareDetail/', state: { pagare: y.pagare, usuario: this.props.getUsuario() } }}><button className={`but-solid`}>Ver Pagaré Asociado</button></Link></div>
                                                                         <div className="col-2"></div>
                                                                     </div>
                                                                 </div>
@@ -213,7 +199,7 @@ class Endosos extends Component {
                                                                     <li className="list-group-item"><span className="text-left font-weight-bold">Cedula de Endosatario: </span><span className="text-right">{y.id_endosante}</span></li>
                                                                 </ul>
                                                                 <div className="card-body">
-                                                                    <Link to={{ pathname: '/pagareDetail/', state: { endoso: y, pagare: y.pagare } }}><button className={`but-solid`}>Ver Pagaré Asociado</button></Link>
+                                                                    <Link to={{ pathname: '/pagareDetail/', state: { endoso: y, pagare: y.pagare, usuario: this.props.getUsuario() } }}><button className={`but-solid`}>Ver Pagaré Asociado</button></Link>
                                                                 </div>
                                                             </div>
                                                         </div>
