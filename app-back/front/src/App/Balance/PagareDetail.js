@@ -115,7 +115,7 @@ class PagareDetail extends Component {
         var imgWidth = (canvas.width * 20) / 240;
         var imgHeight = (canvas.height * 20) / 240; 
         // jspdf changes
-        doc.addImage(myImage, 'JPEG', 10, 100, imgWidth*4, imgHeight*4);
+        doc.addImage(myImage, 'JPEG', 5, 190, imgWidth*4, imgHeight*4);
 
         // doc.addImage(dataUrl, 10, 280);
         const pdf = doc.output('datauristring');

@@ -11,6 +11,7 @@ import Button from 'react-bootstrap/Button';
 import Web3 from 'web3';
 import { EscenarioContext} from '../Context/context';
 import { abi, address, abiEther, addressEther} from '../metamask/abi.js';
+import QRCode from 'qrcode'
 
 import 'react-toastify/dist/ReactToastify.css';
 import './CrearEndoso.css';
@@ -161,7 +162,7 @@ class CrearEndoso extends Component {
         }
     }
 
-    setUpPDF(pagare, endoso, endososAnteriores) {
+    async setUpPDF(pagare, endoso, endososAnteriores) {
         let creacion = new Date(pagare.fechaCreacion)
         let dia = creacion.getDate().toString();
         let mes = creacion.getMonth().toString();
@@ -182,6 +183,16 @@ class CrearEndoso extends Component {
         doc.text(10, 91, `pagaré y que para tal evento proceda inmediatamente.`)
         doc.text(10, 260, `Firma: ${pagare.firma}`)
         doc.text(10, 270, `Cedula: ${pagare.idDeudor}`)
+        //QR
+        var urlString = 'https://ropsten.etherscan.io/tx/' + pagare.firma
+        var canvas = await QRCode.toCanvas(urlString)
+        console.log("asaaa")
+        var myImage = canvas.toDataURL("image/jpeg,1.0");
+        var imgWidth = (canvas.width * 20) / 240;
+        var imgHeight = (canvas.height * 20) / 240; 
+        // pdf changes
+        doc.addImage(myImage, 'JPEG', 5, 190, imgWidth*4, imgHeight*4);
+        
         doc.addPage();
         for (let x in endososPasados) {
             if(endososPasados[x]._id !== this.state._id){
