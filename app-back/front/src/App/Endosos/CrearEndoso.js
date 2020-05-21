@@ -184,12 +184,18 @@ class CrearEndoso extends Component {
         doc.text(10, 270, `Cedula: ${pagare.idDeudor}`)
         doc.addPage();
         for (let x in endososPasados) {
+            if(counter > 290){
+                doc.addPage();
+                counter = 0;
+            }
             if(endososPasados[x]._id !== this.state._id){
+                let fecha = new Date(endososPasados[x].fecha);
                 doc.text(10, 25 + counter, `Endosante: ${endososPasados[x].nombre_endosante}`)
                 doc.text(10, 32 + counter, `Cedula Endosante: ${endososPasados[x].id_endosante}`)
                 doc.text(10, 39 + counter, `Endosatario: ${endososPasados[x].nombre_endosatario}`)
                 doc.text(10, 46 + counter, `Cedula Endosatario: ${endososPasados[x].id_endosatario}`)
-                doc.text(10, 53 + counter, `Firma: ${endososPasados[x].firma}`)
+                doc.text(10, 53 + counter, `Fecha Endoso: ${fecha.getDate()}/${fecha.getMonth()+1}/${fecha.getFullYear()}`)
+                doc.text(10, 60 + counter, `Firma: ${endososPasados[x].firma}`)
                 counter += 60;
             }
         }
@@ -461,7 +467,7 @@ class CrearEndoso extends Component {
                 etapa: endoso.etapa,
             });
 
-        });
+        }).catch(err =>console.log(err.message));
     }
     renderEtapa2() {
 
@@ -543,34 +549,11 @@ class CrearEndoso extends Component {
     async handleChangeContrasenia(event) {
         event.preventDefault();
         let { usuario } = this.props.location.state;
-        this.setState({
-            contrasenia: event.target.value,
-        });
-        await axios.post(
-            '/users/login',
-            {
-                "cedula": usuario.cedula,
-                "contrasenia": event.target.value,
-            },
-            {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }
-        ).then(response => {
-
-            if (response.data.success) {
-                this.setState({
-                    isContrasenia: true,
-                });
-            } else {
-                this.setState({
-                    isContrasenia: false,
-                });
-            }
-
-        }).catch(err => {
-        })
+        if(event.target.value == usuario.cedula){
+            this.setState({
+                isContrasenia: true,
+            });
+        }
     }
 
     handleEtapa3(event) {
@@ -578,7 +561,15 @@ class CrearEndoso extends Component {
         let fecha = new Date();
         let fechaString = `${fecha.getDate()}/${fecha.getMonth()+1}/${fecha.getFullYear()}`;
         if(this.context.escenario === 'Ether'){
-
+            const eth = new Eth(window.web3.currentProvider);
+            const account = this.state.account;
+            const contract = new EthContract(eth);
+            const MiniToken = contract(abiEther);
+            const miniToken = MiniToken.at(addressEther);
+            let fechaDate = new Date();
+            let fecha = Math.round(fechaDate/1000);
+            console.log(account,parseInt(this.state.id_pagare),fecha);
+            console.log(miniToken);
         }else{
             const eth = new Eth(window.web3.currentProvider);
             const account = this.state.account;
@@ -668,8 +659,8 @@ class CrearEndoso extends Component {
                                     <p className="text-center font-weight-bold">Antes de Firmar por favor revisa la previsualización del pagaré y su endoso en la segunda página.</p>
                                     <form>
                                         <div className="form-group">
-                                            <label htmlFor="contrasenia">Digite su contraseña para poder firmar:</label>
-                                            <input name="contrasenia" type="password" onChange={this.handleChangeContrasenia} className="form-control" id="contrasenia" placeholder="Contraseña" disabled={this.isDisabled(2, 'input')} />
+                                            <label htmlFor="contrasenia">Digite su cedula para firmar:</label>
+                                            <input name="contrasenia" type="text" onChange={this.handleChangeContrasenia} className="form-control" id="contrasenia" placeholder="Cédula" disabled={this.isDisabled(2, 'input')} />
                                         </div>
                                         <button name="firmar" type="submit" className="btn btn-success" onClick={this.handleEtapa3} disabled={!this.state.isContrasenia} >Firmar</button>
                                     </form>

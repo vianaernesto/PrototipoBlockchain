@@ -84,7 +84,7 @@ router.post("/pagare/:id/etapa2", (req, res) =>{
         res.status(201).send(response.data);
     })
     .catch(err =>{
-        res.status(500).json({message: err.message});
+        res.status(401).json({message: err.message});
     });
 });
 

@@ -12,10 +12,10 @@ import { CircleToBlockLoading } from 'react-loadingg';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Web3 from 'web3';
-import { EscenarioContext} from '../Context/context';
+import { EscenarioContext } from '../Context/context';
 
 import "react-datepicker/dist/react-datepicker.css";
-import { abi, address, abiEther, addressEther} from '../metamask/abi.js';
+import { abi, address, abiEther, addressEther } from '../metamask/abi.js';
 import './CrearPagare.css';
 
 registerLocale('es', es)
@@ -74,6 +74,7 @@ class CrearPagare extends Component {
         this.renderEtapa2 = this.renderEtapa2.bind(this);
         this.renderEtapa3 = this.renderEtapa3.bind(this);
         this.renderEtapa4 = this.renderEtapa4.bind(this);
+        this.renderFormulario = this.renderFormulario.bind(this);
         this.updatePDF = this.updatePDF.bind(this);
         this.isWeb3 = this.isWeb3.bind(this);
         this.waitForTxToBeMined = this.waitForTxToBeMined.bind(this);
@@ -89,35 +90,37 @@ class CrearPagare extends Component {
             let y = `${rol}`;
             if (this.props.location.state.pagare === undefined) {
                 if (rol === 'acreedor') {
-                    if(this.props.location.state.escenario === 'Ether'){
+
+                    this.setState({
+                        rol: y,
+                        nombreAcreedor: usuario.nombre,
+                        idAcreedor: usuario.cedula,
+                        disableAcreedor: true,
+                        etapa: 0,
+                        id: '',
+                    });
+
+
+                } else {
+                    if (this.props.location.state.escenario === 'Ether') {
                         this.setState({
                             rol: y,
-                            nombreAcreedor: usuario.nombre,
-                            idAcreedor: usuario.cedula,
-                            disableAcreedor: true,
-                            etapa: 2,
+                            nombreDeudor: usuario.nombre,
+                            idDeudor: usuario.cedula,
+                            disableDeudor: true,
+                            etapa: 4,
                             id: '',
                         });
-                    }else{
+                    } else {
                         this.setState({
                             rol: y,
-                            nombreAcreedor: usuario.nombre,
-                            idAcreedor: usuario.cedula,
-                            disableAcreedor: true,
+                            nombreDeudor: usuario.nombre,
+                            idDeudor: usuario.cedula,
+                            disableDeudor: true,
                             etapa: 0,
                             id: '',
                         });
                     }
-                    
-                } else {
-                    this.setState({
-                        rol: y,
-                        nombreDeudor: usuario.nombre,
-                        idDeudor: usuario.cedula,
-                        disableDeudor: true,
-                        etapa: 0,
-                        id: '',
-                    });
                 }
             } else if (this.props.location.state.pagare !== undefined) {
                 let { pagare } = this.props.location.state;
@@ -162,12 +165,12 @@ class CrearPagare extends Component {
                     if (pagare.fechaVencimiento !== null && pagare.fechaVencimiento !== '') {
                         vencimiento = new Date(pagare.fechaVencimiento);
                     }
-                    if(this.props.location.state.escenario === 'Ether'){
+                    if (this.props.location.state.escenario === 'Ether') {
                         this.setState({
                             rol: y,
                             etapa: 3,
                         });
-                    }else{
+                    } else {
                         this.setState({
                             rol: y,
                             etapa: pagare.etapa,
@@ -190,7 +193,7 @@ class CrearPagare extends Component {
                             lugarCreacion: pagare.lugarCreacion,
                         });
                     }
-                    
+
 
                 }
             }
@@ -391,37 +394,11 @@ class CrearPagare extends Component {
     async handleChangeContrasenia(event) {
         event.preventDefault();
         let { usuario } = this.props.location.state;
-        this.setState({
-            contrasenia: event.target.value,
-        });
-        await axios.post(
-            '/users/login',
-            {
-                "cedula": usuario.cedula,
-                "contrasenia": event.target.value,
-            },
-            {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }
-        ).then(response => {
-
-            if (response.data.success) {
-                this.setState({
-                    isContrasenia: true,
-                });
-            } else {
-                this.setState({
-                    isContrasenia: false,
-                });
-            }
-
-        }).catch(err => {
+        if (event.target.value == usuario.cedula) {
             this.setState({
-                show2: true,
+                isContrasenia: true,
             });
-        });
+        }
     }
 
     async handleEtapa1(event) {
@@ -550,58 +527,59 @@ class CrearPagare extends Component {
     handleEtapa3(event) {
         event.preventDefault();
         let escenario = this.context.escenario;
-        const vencimiento = this.state.fechaVencimiento;
-        const vencimientoString = `${vencimiento.getDate()}-${vencimiento.getMonth() + 1}-${vencimiento.getFullYear()}`
-        var data = {
-            lugarCreacion: this.state.lugarCreacion,
-            fechaVencimiento: vencimientoString,
-            codigoRetiro: this.state.codigoRetiro,
-        }
+        if (escenario === 'Ether') {
+            axios.get(`/users/${this.state.idDeudor}`).then(user => {
+                let fecha = new Date();
+                let fechaExpiracion = new Date(fecha.getFullYear() + 5, fecha.getMonth(), fecha.getDate());
+                let fechaVencimiento = new Date(this.state.fechaVencimiento);
+                let info = `${fecha.toLocaleDateString()}, ${fechaVencimiento.toLocaleDateString()}, ${fechaExpiracion.toLocaleDateString()}, ${this.state.lugarCreacion}`;
+                let infoAcreedor = `${this.state.idAcreedor}, ${this.state.nombreAcreedor}`;
+                let infoDeudor = `${this.state.idDeudor}, ${this.state.nombreDeudor}`;
 
-        axios.patch(
-            `/pagares/${this.state.id}/etapa3/`,
-            data,
-            {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }
-        ).then(response => {
-            
-            if(escenario === 'Ether'){
-                axios.get(`/users/${this.state.idDeudor}`).then(user =>{
-                    let fecha = new Date();
-                    let fechaExpiracion = new Date(fecha.getFullYear() + 5, fecha.getMonth(), fecha.getDate());
-                    let fechaVencimiento = new Date(this.state.fechaVencimiento);
-                    let info = `${fecha.toLocaleDateString()}, ${fechaVencimiento.toLocaleDateString()}, ${fechaExpiracion.toLocaleDateString()}, ${this.state.lugarCreacion}`;
-                    let infoAcreedor = `${this.state.idAcreedor}, ${this.state.nombreAcreedor}`;
-                    let infoDeudor = `${this.state.idDeudor}, ${this.state.nombreDeudor}`;
-
-                    let infoCompleta = `${info},${infoAcreedor},${infoDeudor}`;
-                    let fechaCreacionUnix = Math.round(fecha/1000);
-                    let fechaVencimientoUnix = Math.round(fechaVencimiento/1000);
-                    let wei = this.convertidorPesosAWei(this.state.valor);
-                    const eth = new Eth(window.web3.currentProvider);
-                    const address = user.data.address;
-                    const account = this.state.account;
-                    const contract = new EthContract(eth);
-                    const MiniToken = contract(abiEther);
-                    const miniToken = MiniToken.at(addressEther);
-                    miniToken.createPagare(address, infoCompleta, fechaCreacionUnix, fechaVencimientoUnix, {from:account, value:wei})
-                        .then((txHash)=>{
-                            this.waitForTxToBeMined(txHash);
-                        }).catch(error => {
-                            console.log(error);
+                let infoCompleta = `${info},${infoAcreedor},${infoDeudor}`;
+                let fechaCreacionUnix = Math.round(fecha / 1000);
+                let fechaVencimientoUnix = Math.round(fechaVencimiento / 1000);
+                let wei = this.convertidorPesosAWei(this.state.valor);
+                const eth = new Eth(window.web3.currentProvider);
+                const address = user.data.address;
+                const account = this.state.account;
+                const contract = new EthContract(eth);
+                const MiniToken = contract(abiEther);
+                const miniToken = MiniToken.at(addressEther);
+                miniToken.createPagare(address, infoCompleta, fechaCreacionUnix, fechaVencimientoUnix, { from: account, value: wei })
+                    .then((txHash) => {
+                        this.waitForTxToBeMined(txHash);
+                    }).catch(error => {
+                        console.log(error);
                         this.setState({
                             show2: true,
                         })
                     });
-                });
+            });
+        }else{
+            const vencimiento = this.state.fechaVencimiento;
+            const vencimientoString = `${vencimiento.getDate()}-${vencimiento.getMonth() + 1}-${vencimiento.getFullYear()}`
+            var data = {
+                lugarCreacion: this.state.lugarCreacion,
+                fechaVencimiento: vencimientoString,
+                codigoRetiro: this.state.codigoRetiro,
             }
-            let pagare = response.data;
-            this.setState({ etapa: pagare.etapa })
 
-        });
+            axios.patch(
+                `/pagares/${this.state.id}/etapa3/`,
+                data,
+                {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            ).then(response => {
+                let pagare = response.data;
+                this.setState({ etapa: pagare.etapa })
+
+            });
+        }
+        
 
     }
 
@@ -615,21 +593,21 @@ class CrearPagare extends Component {
         let infoAcreedor = `${this.state.idAcreedor}, ${this.state.nombreAcreedor}`;
         let infoDeudor = `${this.state.idDeudor}, ${this.state.nombreDeudor}`;
         let escenario = this.context.escenario;
-        if(escenario === 'Ether'){
+        if (escenario === 'Ether') {
             const eth = new Eth(window.web3.currentProvider);
             const account = this.state.account;
             const contract = new EthContract(eth);
             const MiniToken = contract(abiEther);
             const miniToken = MiniToken.at(addressEther);
-            miniToken.firmarPagare(this.state.id,{from:account})
-                .then((txHash)=>{
+            miniToken.firmarPagare(parseInt(this.state.id), { from: account })
+                .then((txHash) => {
                     this.waitForTxToBeMined(txHash);
                 }).catch(error => {
-                this.setState({
-                    show2: true,
+                    this.setState({
+                        show2: true,
+                    });
                 });
-            });
-        }else{
+        } else {
             const eth = new Eth(window.web3.currentProvider);
             const account = this.state.account;
             const contract = new EthContract(eth);
@@ -645,15 +623,15 @@ class CrearPagare extends Component {
                 });
             });
         }
-        
+
 
     }
 
-    convertidorPesosAWei(valor){
-        let etherC=0.0000013;
-        let ether = valor*etherC;
+    convertidorPesosAWei(valor) {
+        let etherC = 0.0000013;
+        let ether = valor * etherC;
         let weiC = 1000000000000000000;
-        let wei = ether*weiC;
+        let wei = ether * weiC;
         return wei;
     }
 
@@ -675,30 +653,48 @@ class CrearPagare extends Component {
         }
         let id = this.state.id;
         let txReceipt;
-        eth.getTransactionReceipt(txHash, function (error, result) {
-            if (!error) {
-                txReceipt = result;
-                if (txReceipt != null) {
-                    axios.patch(`/pagares/${id}/etapa4`, data, { headers: { 'Content-Type': 'application/json' } })
-                        .then(response => {
-                            self.setState({
-                                isContrasenia: false,
-                                show: false,
-                                redirect: true,
-                            });
-                        })
-                } else {
-                    self.waitForTxToBeMined(txHash);
-                }
+        if(this.context.escenario === "Ether"){
+            eth.getTransactionReceipt(txHash, function (error, result) {
+                if (!error) {
+                    txReceipt = result;
+                    if (txReceipt != null && this.context.escenario) {
+                        
+                    } else {
+                        self.waitForTxToBeMined(txHash);
+                    }
 
-            }
-            else
-                console.error(error);
-        });
+                }
+                else
+                    console.error(error);
+            });
+        }else{
+            eth.getTransactionReceipt(txHash, function (error, result) {
+                if (!error) {
+                    txReceipt = result;
+                    if (txReceipt != null && this.context.escenario) {
+                        axios.patch(`/pagares/${id}/etapa4`, data, { headers: { 'Content-Type': 'application/json' } })
+                            .then(response => {
+                                self.setState({
+                                    isContrasenia: false,
+                                    show: false,
+                                    redirect: true,
+                                });
+                            })
+                    } else {
+                        self.waitForTxToBeMined(txHash);
+                    }
+
+                }
+                else
+                    console.error(error);
+            });
+        }
+        
     }
 
 
     isDisabled(pEtapa, element) {
+        console.log(pEtapa, element);
         if (element === 'card') {
 
             if (pEtapa === this.state.etapa) {
@@ -1107,8 +1103,8 @@ class CrearPagare extends Component {
                                     <p className="text-center font-weight-bold">Antes de Firmar por favor revisa la previsualización del pagaré.</p>
                                     <form>
                                         <div className="form-group">
-                                            <label htmlFor="contrasenia">Digite su contraseña para poder firmar:</label>
-                                            <input name="contrasenia" type="password" onChange={this.handleChangeContrasenia} className="form-control" id="contrasenia" placeholder="Contraseña" disabled={this.isDisabled(3, 'input')} />
+                                            <label htmlFor="contrasenia">Digite su cedula para poder firmar:</label>
+                                            <input name="contrasenia" type="text" onChange={this.handleChangeContrasenia} className="form-control" id="contrasenia" placeholder="Cédula" disabled={this.isDisabled(3, 'input')} />
                                         </div>
                                         <button name="firmar" type="submit" className="btn btn-success" onClick={this.handleEtapa4} disabled={!this.state.isContrasenia && this.state.isweb3}>Firmar</button>
                                     </form>
@@ -1149,10 +1145,10 @@ class CrearPagare extends Component {
         }
     }
 
-    renderNormal(){
-        return(
-        <div>
-            {this.redirect()}
+    renderNormal() {
+        return (
+            <div>
+                {this.redirect()}
                 <div className="row">
                     <div className="col-md-6 col-6 col-lg-6">
                         <h1 className="display-4 text-center font-weight-bold">
@@ -1272,167 +1268,178 @@ class CrearPagare extends Component {
                         </Modal.Footer>
                     </Modal.Body>
                 </Modal>
-        </div>)
+            </div>)
     }
 
-    renderCrear(){
-        if (this.state.idAcreedor === this.props.getUsuario().cedula) {
-            return (
-                <div id="accordion">
-                    <div className="card">
-                        <div className="card-header" id="etapa3">
-                            <div className="col-md-10">
-                                <button className={`btn ${this.isSuccessful(2, 'card')}  ${this.isDisabled(2, 'card')}`} data-toggle="collapse" data-target="#etapa3Collapse" aria-expanded={this.isDisabled(2, 'aria')} aria-controls="etapa3Collapse" disabled={this.isDisabled(2, 'button')} >
-                                    <h5 className={`title-card${this.isSuccessful(2, 'title')}`}>Acuerdo de Retiro</h5>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div id="etapa3Collapse" className={`collapse ${this.isDisabled(2, 'accordion')}`} aria-labelledby="etapa3" data-parent="#accordion">
-                            <div className="row">
-                                <div className="col-1 col-md-1 col-lg-1"></div>
-                                <div className="col-5 col-md-5 col-lg-5">
-                                    {this.state.etapa < 2
-                                        ? <h3 className="text-left font-weight-bold">Esperando código de retiro del acreedor</h3>
-                                        :
-                                        <form>
-                                            <div className="form-group">
-                                                <label htmlFor="lugarCreacion">Lugar de Creación</label>
-                                                <input name="lugarCreacion" type="text" onChange={this.handleChangeEtapa3} className="form-control" id="lugarCreacion" placeholder={this.placeholder(2, 'lugarCreacion')} disabled={this.isDisabled(2, 'input')} />
-                                            </div>
-                                            <div className="form-group">
-                                                <label htmlFor="fechaVencimiento">Fecha de Vencimiento</label>
-                                                <DatePicker id="fechaVencimiento" name="fechaVencimiento" locale="es" selected={this.state.fechaVencimiento} onChange={this.handleChangeDate} disabled={this.isDisabled(2, 'input')} dateFormat='dd/MM/yyyy' minDate={new Date()} maxDate={addYears(new Date(), 5)} />
-                                            </div>
-                                            <div className="form-group">
-                                                <label htmlFor="codigoRetiro">Código de retiro</label>
-                                                <input name="codigoRetiro" type="text" onChange={this.handleChangeEtapa3} className="form-control" id="codigoRetiro" placeholder={this.placeholder(2, 'codigoRetiro')} disabled={this.isDisabled(2, 'input')} />
-                                            </div>
-                                            <button name="proponerRetiro" type="submit" className="btn btn-primary" onClick={this.handleEtapa3} style={{ visibility: this.isDisabled(2, 'submit') }} >Siguiente Paso</button>
-                                        </form>
-                                    }
-                                </div>
-                                <div className="col-6 col-md-6 col-lg-6"></div>
-                            </div>
-                            <div className="row">&nbsp;</div>
+    renderFormulario() {
+        return (
+            <div id="accordion">
+                <div className="card">
+                    <div className="card-header" id="formulario">
+                        <div className="col-md-10">
+                            <button className={`btn ${this.isSuccessful(4, 'card')}  ${this.isDisabled(4, 'card')}`} data-toggle="collapse" data-target="#etapa1Collapse" aria-expanded={this.isDisabled(4, 'aria')} aria-controls="etapa1Collapse" disabled={this.isDisabled(4, 'button')}>
+                                <h5 className={`title-card${this.isSuccessful(4, 'title')}`}>Formulario</h5>
+                            </button>
                         </div>
                     </div>
-                </div>
-            );
-        } else {
-            return (
-                <div id="accordion">
-                    <div className="card">
-                        <div className="card-header" id="etapa3">
-                            <div className="col-md-10">
-                                <button className={`btn ${this.state.etapa < 2 ? '' : this.state.etapa === 2 ? 'btn-warning' : 'btn-success'}`} data-toggle="collapse" data-target="#etapa3Collapse" aria-expanded={this.isDisabled(2, 'aria')} aria-controls="etapa3Collapse" disabled={this.state.etapa < 2 ? true : false}>
-                                    <h5 className={`title-card-${this.state.etapa < 2 ? 'ongoing' : 'success'}`}>Acuerdo de Retiro</h5>
-                                </button>
-                            </div>
-                        </div>
 
-                        <div id="etapa3Collapse" className={`collapse ${this.isDisabled(2, 'accordion')}`} aria-labelledby="etapa3" data-parent="#accordion">
-                            <div className="row">
-                                <div className="col-1 col-md-1 col-lg-1"></div>
-                                <div className="col-5 col-md-5 col-lg-5">
-                                    {this.state.etapa < 3
-                                        ? <h3 className="text-left font-weight-bold">Esperando código de retiro del acreedor</h3>
-                                        :
-                                        <form>
-                                            <div className="form-group">
-                                                <label htmlFor="lugarCreacion">Lugar de Creación</label>
-                                                <input name="lugarCreacion" type="text" onChange={this.handleChangeEtapa3} className="form-control" id="lugarCreacion" placeholder={this.placeholder(2, 'lugarCreacion')} disabled={this.isDisabled(2, 'input')} />
-                                            </div>
-                                            <div className="form-group">
-                                                <label htmlFor="fechaVencimiento">Fecha de Vencimiento</label>
-                                                <DatePicker id="fechaVencimiento" name="fechaVencimiento" locale="es" selected={this.state.fechaVencimiento} onChange={this.handleChangeDate} disabled={this.isDisabled(2, 'input')} dateFormat='dd/MM/yyyy' />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Código de retiro</label>
-                                                <h5 className="text-center">Cuando Firmes obtendras el código para retirar el dinero</h5>
-                                            </div>
-                                            <button name="proponerRetiro" type="submit" className="btn btn-primary" onClick={this.handleEtapa3} style={{ visibility: this.isDisabled(2, 'submit') }} >Siguiente Paso</button>
-                                        </form>
-                                    }
+                    <div id="Collapese" className={`collapse ${this.isDisabled(4, 'accordion')}`} aria-labelledby="etapa1" data-parent="#accordion">
+                        <div className="row">
+                            <form>
+                                <div className="row">
+                                    <div className="col-1 col-md-1 col-lg-1"></div>
+                                    <div className="col-5 col-md-5 col-lg-5">
+                                        <div className="form-group">
+                                            <label htmlFor="nombreAcreedor">Nombre del Acreedor</label>
+                                            <input name="nombreAcreedor" type="text" className="form-control" id="nombreAcreedor" onChange={this.handleChangeEtapa1} aria-describedby="nombreAcreedor" placeholder={this.placeholder(4, 'nombreAcreedor')} disabled={this.state.disableAcreedor} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="idAcreedor">Cédula del Acreedor</label>
+                                            <input name="idAcreedor" type="number" min="0" className="form-control" id="idAcreedor" onChange={this.handleChangeEtapa1} placeholder={this.placeholder(4, 'idAcreedor')} disabled={this.state.disableAcreedor} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="lugarCreacion">Lugar de Creación</label>
+                                            <input name="lugarCreacion" type="text" onChange={this.handleChangeEtapa3} className="form-control" id="lugarCreacion" placeholder={`Bogotá`} disabled={this.isDisabled(4, 'input')} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="fechaVencimiento">Fecha de Vencimiento</label>
+                                            <DatePicker id="fechaVencimiento" name="fechaVencimiento" locale="es" selected={new Date()} onChange={this.handleChangeDate} disabled={this.isDisabled(4, 'input')} dateFormat='dd/MM/yyyy' minDate={new Date()} maxDate={addYears(new Date(), 5)} />
+                                        </div>
+
+                                    </div>
+                                    <div className="col-5 col-md-5 col-lg-5">
+                                        <div className="form-group">
+                                            <label htmlFor="nombreDeudor">Nombre del deudor</label>
+                                            <input name="nombreDeudor" type="text" className="form-control" id="nombreDeudor" onChange={this.handleChangeEtapa1} aria-describedby="nombreDeudor" placeholder={this.placeholder(4, 'nombreDeudor')} disabled={this.state.disableDeudor} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="idDeudor">Cédula del Deudor</label>
+                                            <input name="idDeudor" type="number" min="0" className="form-control" id="idDeudor" onChange={this.handleChangeEtapa1} placeholder={this.placeholder(4, 'idDeudor')} disabled={this.state.disableDeudor} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="valor">Valor</label>
+                                            <input name="valor" type="number" min="1" onChange={this.handleChangeEtapa2} className="form-control" id="valor" aria-describedby="Valor" placeholder={`$10000`} disabled={this.isDisabled(4, 'input')} />
+                                            <small id="valorHelp" className="form-text text-muted">valor acordado de prestamo</small>
+                                        </div>
+
+                                    </div>
+                                    <div className="col-1 col-md-1 col-lg-1"></div>
                                 </div>
-                                <div className="col-6 col-md-6 col-lg-6"></div>
-                            </div>
-                            <div className="row">&nbsp;</div>
+                                <div className="row">
+                                    <div className="col-3 col-md-3 col-lg-5"></div>
+                                    <div className="col-6 col-md-6 col-lg-6">
+                                        <button type="submit" className="btn btn-primary" onClick={this.handleEtapa3} style={{ visibility: this.isDisabled(4, 'submit') }} disabled={this.state.isSame}>Siguiente Paso</button>
+                                    </div>
+                                    <div className="col-1 col-md-1 col-lg-1"></div>
+                                </div>
+                            </form>
                         </div>
+                        <div className="row">&nbsp;</div>
                     </div>
                 </div>
-            );
-        }
+            </div>
+        )
     }
 
-    renderEther(){
-        return(
+    renderEther() {
+        return (
             <div>
                 <div className="row">
-                        <div className="col-md-6 col-6 col-lg-6">
-                            <h1 className="display-4 text-center font-weight-bold">
-                                Pasos por completar
+                    <div className="col-md-6 col-6 col-lg-6">
+                        <h1 className="display-4 text-center font-weight-bold">
+                            Pasos por completar
                 </h1>
-                        </div>
-                        <div className="col-md-6 col-6 col-lg-6">
-                            <h1 className="display-4 text-center font-weight-bold">
-                                Previsualización en PDF
+                    </div>
+                    <div className="col-md-6 col-6 col-lg-6">
+                        <h1 className="display-4 text-center font-weight-bold">
+                            Previsualización en PDF
                         <button className="but-solid" onClick={this.updatePDF} style={{ visibility: this.isDisabled(0, 'pdf') }}>Click para actualizar</button>
-                            </h1>
-                        </div>
+                        </h1>
                     </div>
-                    <div className="row">
-                        <div className="col-md-6 col-6 col-lg-6">
-                            <div className="row">&nbsp;</div>
-                            {this.renderEtapa3()}
-                            <div className="row">&nbsp;</div>
-                            {this.renderEtapa4()}
-                            <div className="row">&nbsp;</div>
-                        </div>
-                        <div className="col-md-6 col-lg-6 col-6">{this.renderPreview()}</div>
-                    </div>
-                    <Modal show={this.state.show2} onHide={() => { this.setState({ show2: false }) }}>
-                        <Modal.Header closeButton>
-                            <Modal.Title>Transacción rechazada</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <div className="row">
-                                <h6>&nbsp;Rechazaste la transacción</h6>
-                            </div>
-                            <div className="row">
-                                &nbsp;
                 </div>
-                            <div className="row">
-                                <h6>&nbsp;Para firmar el pagaré necesitas confirmar la transacción</h6>
-                            </div>
-                        </Modal.Body>
-                        <Modal.Footer>
-                            <Button className="but-solid" onClick={() => { this.setState({ show2: false }) }}>
-                                Cerrar
-                </Button>
-                        </Modal.Footer>
-                    </Modal>
-                    <Modal show={this.state.show}>
-                        <Modal.Header>
-                            <Modal.Title>Esperando confirmación</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <div className="row">
-                                <h6>&nbsp;Se está confirmando creación del pagaré, cuando se confirme te redigiremos a tu balance.</h6>
-                            </div>
-                            <div className="row">
-                                &nbsp;
-                    </div>
-                            <div className="row">
-                                &nbsp;
-                    </div>
-                            <Modal.Footer>
-                                <div className="row">
-                                    <CircleToBlockLoading size={35} />
+                <div className="row">
+                    <div className="col-md-6 col-6 col-lg-6">
+                        <div className="row">&nbsp;</div>
+                        <div className="row">&nbsp;</div>
+                        {this.renderFormulario()}
+                        <div className="row">&nbsp;</div>
+
+                        <div id="accordion">
+                            <div className="card">
+                                <div className="card-header" id="etapa4">
+                                    <div className="col-md-10">
+                                        <button className={`btn ${this.isSuccessful(5, 'card')}  ${this.isDisabled(5, 'card')}`} data-toggle="collapse" data-target="#etapa4Collapse" aria-expanded={this.isDisabled(5, 'aria')} aria-controls="etapa4Collapse" disabled={this.isDisabled(5, 'button')} >
+                                            <h5 className={`title-card${this.isSuccessful(5, 'title')}`}>Firma</h5>
+                                        </button>
+                                    </div>
                                 </div>
-                            </Modal.Footer>
-                        </Modal.Body>
-                    </Modal>
+
+                                <div id="etapa4Collapse" className={`collapse ${this.isDisabled(5, 'accordion')}`} aria-labelledby="etapa4" data-parent="#accordion">
+                                    <div className="row">
+                                        <div className="col-1 col-md-1 col-lg-1"></div>
+                                        <div className="col-5 col-md-5 col-lg-5">
+                                            <p>&nbsp;</p>
+                                            <p className="text-center font-weight-bold">Antes de Firmar por favor revisa la previsualización del pagaré.</p>
+                                            <form>
+                                                <div className="form-group">
+                                                    <label htmlFor="contrasenia">Digite su cedula para poder firmar:</label>
+                                                    <input name="contrasenia" type="text" onChange={this.handleChangeContrasenia} className="form-control" id="contrasenia" placeholder="Cédula" disabled={this.isDisabled(5, 'input')} />
+                                                </div>
+                                                <button name="firmar" type="submit" className="btn btn-success" onClick={this.handleEtapa4} disabled={!this.state.isContrasenia && this.state.isweb3}>Firmar</button>
+                                            </form>
+                                        </div>
+                                        <div className="col-6 col-md-6 col-lg-6"></div>
+                                    </div>
+                                    <div className="row">&nbsp;</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="row">&nbsp;</div>
+                    </div>
+                    <div className="col-md-6 col-lg-6 col-6">{this.renderPreview()}</div>
+                </div>
+                <Modal show={this.state.show2} onHide={() => { this.setState({ show2: false }) }}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Transacción rechazada</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="row">
+                            <h6>&nbsp;Rechazaste la transacción</h6>
+                        </div>
+                        <div className="row">
+                            &nbsp;
+                </div>
+                        <div className="row">
+                            <h6>&nbsp;Para firmar el pagaré necesitas confirmar la transacción</h6>
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button className="but-solid" onClick={() => { this.setState({ show2: false }) }}>
+                            Cerrar
+                </Button>
+                    </Modal.Footer>
+                </Modal>
+                <Modal show={this.state.show}>
+                    <Modal.Header>
+                        <Modal.Title>Esperando confirmación</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="row">
+                            <h6>&nbsp;Se está confirmando creación del pagaré, cuando se confirme te redigiremos a tu balance.</h6>
+                        </div>
+                        <div className="row">
+                            &nbsp;
+                    </div>
+                        <div className="row">
+                            &nbsp;
+                    </div>
+                        <Modal.Footer>
+                            <div className="row">
+                                <CircleToBlockLoading size={35} />
+                            </div>
+                        </Modal.Footer>
+                    </Modal.Body>
+                </Modal>
             </div>
         )
     }
@@ -1441,8 +1448,8 @@ class CrearPagare extends Component {
             <div className="content-body host">
                 {this.redirect()}
                 {this.context.escenario === 'Ether'
-                ? this.renderEther() 
-                : this.renderNormal()}
+                    ? this.renderEther()
+                    : this.renderNormal()}
             </div>);
     }
 }
