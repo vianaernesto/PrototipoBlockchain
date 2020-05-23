@@ -11,7 +11,10 @@ h1, h2, h3, h4 {
     font-family: 'Karla', sans-serif;
 }
 
-
+.error {
+    font-size: 8pt;
+    color: red;
+}
 
 .title-card {
     color: black !important;

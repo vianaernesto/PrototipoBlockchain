@@ -2,13 +2,11 @@ import React, { Component } from "react";
 import {Redirect, Link} from 'react-router-dom';
 import axios from "axios";
 import jsPDF from 'jspdf';
-import $ from 'jquery';
 import QRCode from 'qrcode'
 import {Col, Row, Nav, Tab, NavItem, NavLink, TabContent, TabPane} from 'react-bootstrap';
 
 
 import './PagareDetail.css';
-import JumpCircleLoading from "react-loadingg/lib/JumpCircleLoading";
 
 class PagareDetail extends Component {
     constructor(props) {
@@ -142,27 +140,35 @@ class PagareDetail extends Component {
         doc.text(10,270,`Cedula: ${pagare.idDeudor}`)
         var urlString = 'https://ropsten.etherscan.io/tx/' + pagare.firma
         var canvas = await QRCode.toCanvas(urlString)
-        console.log("asaaa")
         var myImage = canvas.toDataURL("image/jpeg,1.0");
         var imgWidth = (canvas.width * 20) / 240;
         var imgHeight = (canvas.height * 20) / 240; 
         // jspdf changes
         doc.addImage(myImage, 'JPEG', 5, 190, imgWidth*4, imgHeight*4);
         doc.addPage();
-        for (let x in endososPasados) {
+        let endososPDF = endososPasados.reverse();
+        for (let x in endososPDF) {
             if(counter > 290){
                 doc.addPage();
                 counter = 0;
             }
-            if(endososPasados[x].etapa === 3){
-                let fecha = new Date(endososPasados[x].fecha);
-                doc.text(10, 25 + counter, `Endosante: ${endososPasados[x].nombre_endosante}`)
-                doc.text(10, 32 + counter, `Cedula Endosante: ${endososPasados[x].id_endosante}`)
-                doc.text(10, 39 + counter, `Endosatario: ${endososPasados[x].nombre_endosatario}`)
-                doc.text(10, 46 + counter, `Cedula Endosatario: ${endososPasados[x].id_endosatario}`)
+            if(endososPDF[x].etapa === 3){
+                if(endososPDF[x].es_ultimo_endoso){
+                    doc.setTextColor(255, 0, 0);
+                    doc.text(10, 18 + counter, `Endoso #${parseInt(x)+1} (Último Endoso)`)
+                }else{
+                    doc.setTextColor(255, 0, 0);
+                    doc.text(10, 18 + counter, `Endoso #${parseInt(x)+1}`)
+                }
+                doc.setTextColor(0,0,0);
+                let fecha = new Date(endososPDF[x].fecha);
+                doc.text(10, 25 + counter, `Endosante: ${endososPDF[x].nombre_endosante}`)
+                doc.text(10, 32 + counter, `Cedula Endosante: ${endososPDF[x].id_endosante}`)
+                doc.text(10, 39 + counter, `Endosatario: ${endososPDF[x].nombre_endosatario}`)
+                doc.text(10, 46 + counter, `Cedula Endosatario: ${endososPDF[x].id_endosatario}`)
                 doc.text(10, 53 + counter, `Fecha Endoso: ${fecha.getDate()}/${fecha.getMonth()+1}/${fecha.getFullYear()}`)
-                doc.text(10, 60 + counter, `Firma: ${endososPasados[x].firma}`)
-                counter += 60;
+                doc.text(10, 60 + counter, `Firma: ${endososPDF[x].firma}`)
+                counter += 55;
             }
                 
         }

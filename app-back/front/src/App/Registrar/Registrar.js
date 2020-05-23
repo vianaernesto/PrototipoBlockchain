@@ -56,6 +56,7 @@ export default class Registrar extends Component {
             domain: '',
             domainSubmit: 'propio',
             modalState: 'subdominio',
+            alreadyRegistered: false,
         }
 
         this.handleCedula = this.handleCedula.bind(this);
@@ -80,55 +81,75 @@ export default class Registrar extends Component {
             const ens = new ENS(window.web3.currentProvider);
             window.ethereum.enable()
                 .then(enabled => {
-                    setInterval(() => {
-                        newWeb3.eth.getAccounts().then(accounts => {
-                            if (accounts.length !== 0 && accounts[0] !== this.state.address) {
-                                isuser = true;
-                                let userAddress = accounts[0];
-                                ens.reverse(userAddress).name()
-                                    .then(response => {
-                                        ens.resolver(response).addr()
-                                            .then(dir => {
-                                                if (dir === userAddress) {
-                                                    this.setState({
-                                                        isUser: isuser,
-                                                        address: userAddress,
-                                                        domain: response
-                                                    });
-                                                } else {
+                        setInterval(() => {
+                            newWeb3.eth.getAccounts().then(accounts => {
+                                if (accounts.length !== 0 && accounts[0] !== this.state.address) {
+                                    isuser = true;
+                                    let userAddress = accounts[0];
+                                    if(this.context.escenario === "Ether"){
+                                        ens.reverse(userAddress).name()
+                                        .then(response => {
+                                            ens.resolver(response).addr()
+                                                .then(dir => {
+                                                    if (dir === userAddress) {
+                                                        this.setState({
+                                                            isUser: isuser,
+                                                            address: userAddress,
+                                                            domain: response
+                                                        });
+                                                    } else {
+                                                        this.setState({
+                                                            isUser: isuser,
+                                                            address: userAddress,
+                                                            domainSubmit: 'nuevo'
+                                                        });
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    console.log(error);
                                                     this.setState({
                                                         isUser: isuser,
                                                         address: userAddress,
                                                         domainSubmit: 'nuevo'
                                                     });
-                                                }
-                                            })
-                                            .catch(error => {
-                                                console.log(error);
-                                                this.setState({
-                                                    isUser: isuser,
-                                                    address: userAddress,
-                                                    domainSubmit: 'nuevo'
                                                 });
+                                        })
+                                        .catch(error => {
+                                            console.log(error);
+                                            this.setState({
+                                                isUser: isuser,
+                                                address: userAddress,
+                                                domainSubmit: 'nuevo'
                                             });
-                                    })
-                                    .catch(error => {
-                                        console.log(error);
-                                        this.setState({
-                                            isUser: isuser,
-                                            address: userAddress,
-                                            domainSubmit: 'nuevo'
                                         });
-                                    });
+                                    }else if(this.context.escenario !== "Ether" && accounts[0] !== this.state.address){
+                                        axios.get(`/users/direccion/${userAddress}`)
+                                        .then(response => {
+                                            if (response.data === null) {
+                                                this.setState({
+                                                    alreadyRegistered: false,
+                                                    isUser: true,
+                                                    address: userAddress,
+                                                });
+                                            } else {
+                                                this.setState({
+                                                    alreadyRegistered: true,
+                                                    isUser: true,
+                                                    address: userAddress,
+                                                })
+                                            }
+                                        });
+                                    }
+                                    
 
-                            } else if (accounts.length === 0) {
-                                this.setState({
-                                    isUser: false,
-                                })
-                            }
-                        });
+                                } else if (accounts.length === 0) {
+                                    this.setState({
+                                        isUser: false,
+                                    })
+                                }
+                            });
 
-                    }, 100);
+                        }, 100);
                 })
                 .catch(error => {
                     this.setState({ show2: true });
@@ -266,8 +287,7 @@ export default class Registrar extends Component {
                     });
                 }
             });
-        } else if(this.context.escenario !== 'ENS'){
-            let domain = this.state.domain;
+        } else if (this.context.escenario !== 'ENS') {
             await axios.post(
                 '/users',
                 {
@@ -606,7 +626,9 @@ export default class Registrar extends Component {
                                                 <div >
                                                     <Container className="registrar-container">
                                                         <Form className="text-left">
-                                                            <small className="text-muted">Todos los campos con (*) son obligatorios</small>
+                                                            {this.state.alreadyRegistered
+                                                                ? <small className="error">Ya hay una cuenta registrada con su dirección de metamask.</small>
+                                                                : <small className="text-muted">Todos los campos con (*) son obligatorios</small>}
                                                             <Form.Group>
                                                                 <Form.Label htmlFor="cedula">Cedula *</Form.Label>
                                                                 <Form.Control type="text" id="cedula" autoComplete="new-password" name="cedula" placeholder={cedula} onChange={this.handleCedula}></Form.Control>
@@ -647,7 +669,7 @@ export default class Registrar extends Component {
                                                                 </Form.Group>
                                                                 : <div></div>}
                                                             <div className="d-flex justify-content-center pt-3">
-                                                                <button type="submit" className="but-solid" onClick={this.handleSubmit}>Registrarse</button>
+                                                                <button type="submit" className="but-solid" onClick={this.handleSubmit} disabled={this.state.alreadyRegistered}>Registrarse</button>
                                                             </div>
                                                         </Form>
                                                     </Container>

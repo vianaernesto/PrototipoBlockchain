@@ -28,7 +28,7 @@ class HandlerGenerator {
                     } 
                     else {
                         
-                        let token = jwt.sign({ cedula: doc.cedula, nombres: doc.nombres, apellidos : doc.apellidos, correo: doc.correo, _id: doc._id, address : doc.address},
+                        let token = jwt.sign({ cedula: doc.cedula, nombres: doc.nombres, apellidos : doc.apellidos, correo: doc.correo, _id: doc._id, address : doc.address, domain: doc.domain},
                             config.secret, { expiresIn: '2h'});
 
                             res.status(200).json({

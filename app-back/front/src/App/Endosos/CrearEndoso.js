@@ -9,8 +9,8 @@ import { CircleToBlockLoading } from 'react-loadingg';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Web3 from 'web3';
-import { EscenarioContext} from '../Context/context';
-import { abi, address, abiEther, addressEther} from '../metamask/abi.js';
+import { EscenarioContext } from '../Context/context';
+import { abi, address, abiEther, addressEther } from '../metamask/abi.js';
 import QRCode from 'qrcode'
 
 import 'react-toastify/dist/ReactToastify.css';
@@ -40,9 +40,10 @@ class CrearEndoso extends Component {
             contrasenia: "",
             isSame: false,
             isweb3: false,
-            account : '',
+            account: '',
             show: false,
-            show2:false,
+            show2: false,
+            canFirmar: false,
         }
         this.setUpPDF = this.setUpPDF.bind(this);
         this.renderEtapa1 = this.renderEtapa1.bind(this);
@@ -71,11 +72,11 @@ class CrearEndoso extends Component {
                 });
             let endoso = this.props.location.state.endoso;
             let endoso2 = this.props.location.state.endoso2;
-            if(endoso2 !== undefined){
+            if (endoso2 !== undefined) {
                 this.setState({
-                    _id:"",
+                    _id: "",
                     codigo_retiro: "",
-                    confirmacion_transaccion:"",
+                    confirmacion_transaccion: "",
                     es_ultimo_endoso: null,
                     etapa: 0,
                     fecha: "",
@@ -86,7 +87,7 @@ class CrearEndoso extends Component {
                     id_endosatario: 0,
                     id_pagare: endoso2.id_pagare,
                     nombre_endosante: endoso2.nombre_endosatario,
-                    nombre_endosatario:"",
+                    nombre_endosatario: "",
                     redirect: false,
                     isSame: false,
                     isContrasenia: false,
@@ -141,24 +142,37 @@ class CrearEndoso extends Component {
 
     redirect() {
         if (this.state.redirect) {
-            return <Redirect to='/balance' />
+            return <Redirect to='/endosos' />
         }
     }
 
     isWeb3() {
         if (typeof window.web3 !== 'undefined') {
             let newWeb3 = new Web3(window.web3.currentProvider);
-            newWeb3.eth.getAccounts().then(accounts => {
-                if (accounts.length !== 0) {
-                    let userAddress = accounts[0];
-                    this.setState({
-                        account: userAddress,
-                    })
-                }
+            let loginAddress = this.props.getUsuario().address;
+            window.ethereum.enable().then(enabled => {
+                setInterval(() => {
+                    newWeb3.eth.getAccounts().then(accounts => {
+                        let userAddress = accounts[0];
+                        if (accounts[0] === loginAddress) {
+                            this.setState({
+                                account: userAddress,
+                                canFirmar: true,
+                            })
+                        } else {
+                            this.setState({
+                                account: loginAddress,
+                                canFirmar: false,
+                            })
+                        }
+                    });
+
+                }, 100);
+                this.setState({
+                    isweb3: true,
+                });
             });
-            this.setState({
-                isweb3: true,
-            })
+
         }
     }
 
@@ -175,7 +189,7 @@ class CrearEndoso extends Component {
         doc.setFontSize(12);
         doc.text(10, 35, `Yo ${pagare.nombreDeudor} idenficado con la cedula de ciudadanía ${pagare.idDeudor} me obligo `);
         doc.text(10, 42, `a pagar solidaria e incondicionalmente a favor de ${pagare.nombreAcreedor} `);
-        doc.text(10,49, 'o de quien represente sus derechos');
+        doc.text(10, 49, 'o de quien represente sus derechos');
         doc.text(10, 56, `o al tenedor legitimo del presente titulo valor en la ciudad de ${pagare.lugarCreacion} la suma de`);
         doc.text(10, 63, `${pagare.valor} pesos moneda corriente el día ${dia} del mes de ${mes} del ${anio}. `)
         doc.text(10, 77, `Autorizo irrevocablemente a ${pagare.nombreAcreedor} o a quien represente sus derechos`)
@@ -186,34 +200,42 @@ class CrearEndoso extends Component {
         //QR
         var urlString = 'https://ropsten.etherscan.io/tx/' + pagare.firma
         var canvas = await QRCode.toCanvas(urlString)
-        console.log("asaaa")
         var myImage = canvas.toDataURL("image/jpeg,1.0");
         var imgWidth = (canvas.width * 20) / 240;
-        var imgHeight = (canvas.height * 20) / 240; 
+        var imgHeight = (canvas.height * 20) / 240;
         // pdf changes
-        doc.addImage(myImage, 'JPEG', 5, 190, imgWidth*4, imgHeight*4);
-        
+        doc.addImage(myImage, 'JPEG', 5, 190, imgWidth * 4, imgHeight * 4);
+
         doc.addPage();
         for (let x in endososPasados) {
-            if(counter > 290){
+            if (counter > 290) {
                 doc.addPage();
                 counter = 0;
             }
-            if(endososPasados[x]._id !== this.state._id){
+            if (endososPasados[x]._id !== this.state._id && endososPasados[x].firma !== "null") {
                 let fecha = new Date(endososPasados[x].fecha);
+
+                if (endososPasados[x].es_ultimo_endoso) {
+                    doc.setTextColor(255, 0, 0);
+                    doc.text(10, 18 + counter, `Endoso #${parseInt(x) + 1} (Último Endoso)`)
+                } else {
+                    doc.setTextColor(255, 0, 0);
+                    doc.text(10, 18 + counter, `Endoso #${parseInt(x) + 1}`)
+                }
+                doc.setTextColor(0, 0, 0);
                 doc.text(10, 25 + counter, `Endosante: ${endososPasados[x].nombre_endosante}`)
                 doc.text(10, 32 + counter, `Cedula Endosante: ${endososPasados[x].id_endosante}`)
                 doc.text(10, 39 + counter, `Endosatario: ${endososPasados[x].nombre_endosatario}`)
                 doc.text(10, 46 + counter, `Cedula Endosatario: ${endososPasados[x].id_endosatario}`)
-                doc.text(10, 53 + counter, `Fecha Endoso: ${fecha.getDate()}/${fecha.getMonth()+1}/${fecha.getFullYear()}`)
+                doc.text(10, 53 + counter, `Fecha Endoso: ${fecha.getDate()}/${fecha.getMonth() + 1}/${fecha.getFullYear()}`)
                 doc.text(10, 60 + counter, `Firma: ${endososPasados[x].firma}`)
-                counter += 60;
+                counter += 55;
             }
         }
         if (endoso !== undefined) {
             doc.setTextColor(255, 0, 0);
             doc.text(10, 25 + counter, `Endoso Pendiente:`)
-            doc.setTextColor(0,0,0);
+            doc.setTextColor(0, 0, 0);
             doc.text(10, 32 + counter, `Endosante: ${endoso.nombre_endosante}`)
             doc.text(10, 39 + counter, `Cedula Endosante: ${endoso.id_endosante}`)
             doc.text(10, 46 + counter, `Endosatario: ${endoso.nombre_endosatario}`)
@@ -378,13 +400,13 @@ class CrearEndoso extends Component {
 
 
         }).catch(err => {
-            if(err.response.status === 401){
-                toast.error("El pagaré ya está en un proceso de endoso");
-                setTimeout(()=>{
+            if (err.response.status === 401 || err.response.status === 500) {
+                toast.error("El pagaré ya está en un proceso de endoso, revise los endosos pendientes");
+                setTimeout(() => {
                     this.setState({
-                        redirect :true,
+                        redirect: true,
                     });
-                },5000);
+                }, 5000);
             }
         })
     }
@@ -478,7 +500,7 @@ class CrearEndoso extends Component {
                 etapa: endoso.etapa,
             });
 
-        }).catch(err =>console.log(err.message));
+        }).catch(err => console.log(err.message));
     }
     renderEtapa2() {
 
@@ -502,7 +524,7 @@ class CrearEndoso extends Component {
                                         <div className="col-10 col-md-10 col-lg-10">
                                             <div className="form-group">
                                                 <label htmlFor="codigo_retiro">Código de Retiro</label>
-                                                <input name="codigo_retiro" type="text" className="form-control" id="codigo_retiro" onChange={this.handleChangeEtapa2} aria-describedby="codigo_retiro" placeholder={this.placeholder(1, 'codigo_retiro ')} disabled={true} disabled={this.isDisabled(1, 'button')} />
+                                                <input name="codigo_retiro" type="text" className="form-control" id="codigo_retiro" onChange={this.handleChangeEtapa2} aria-describedby="codigo_retiro" placeholder={this.placeholder(1, 'codigo_retiro ')} disabled={this.isDisabled(1, 'button')} />
                                             </div>
                                         </div>
                                         <div className="col-1 col-md-1 col-lg-1"></div>
@@ -560,7 +582,7 @@ class CrearEndoso extends Component {
     async handleChangeContrasenia(event) {
         event.preventDefault();
         let { usuario } = this.props.location.state;
-        if(event.target.value == usuario.cedula){
+        if (event.target.value == usuario.cedula) {
             this.setState({
                 isContrasenia: true,
             });
@@ -570,18 +592,18 @@ class CrearEndoso extends Component {
     handleEtapa3(event) {
         event.preventDefault();
         let fecha = new Date();
-        let fechaString = `${fecha.getDate()}/${fecha.getMonth()+1}/${fecha.getFullYear()}`;
-        if(this.context.escenario === 'Ether'){
+        let fechaString = `${fecha.getDate()}/${fecha.getMonth() + 1}/${fecha.getFullYear()}`;
+        if (this.context.escenario === 'Ether') {
             const eth = new Eth(window.web3.currentProvider);
             const account = this.state.account;
             const contract = new EthContract(eth);
             const MiniToken = contract(abiEther);
             const miniToken = MiniToken.at(addressEther);
             let fechaDate = new Date();
-            let fecha = Math.round(fechaDate/1000);
-            console.log(account,parseInt(this.state.id_pagare),fecha);
+            let fecha = Math.round(fechaDate / 1000);
+            console.log(account, parseInt(this.state.id_pagare), fecha);
             console.log(miniToken);
-        }else{
+        } else {
             const eth = new Eth(window.web3.currentProvider);
             const account = this.state.account;
             const contract = new EthContract(eth);
@@ -592,8 +614,8 @@ class CrearEndoso extends Component {
             let pagare = `${this.state.id_pagare}`;
             let firma = "N/A";
             let idEndoso = `${this.state._id}`;
-            miniToken.endosarPagare(endosante, endosatario,pagare,fechaString,firma, idEndoso, {from: account})
-                .then((txHash)=>{
+            miniToken.endosarPagare(endosante, endosatario, pagare, fechaString, firma, idEndoso, { from: account })
+                .then((txHash) => {
                     this.waitForTxToBeMined(txHash);
                 }).catch(error => {
                     console.log(error);
@@ -669,11 +691,13 @@ class CrearEndoso extends Component {
                                     <p>&nbsp;</p>
                                     <p className="text-center font-weight-bold">Antes de Firmar por favor revisa la previsualización del pagaré y su endoso en la segunda página.</p>
                                     <form>
+                                        {this.state.canFirmar ? "" : <small className="error">Para firmar, ingrese a la cuenta de MetaMask con la que se registró.</small>}
+                                        {this.state.isweb3 ? "" : <small className="error">Para firmar, instale Metamask en su navegador.</small>}
                                         <div className="form-group">
                                             <label htmlFor="contrasenia">Digite su cedula para firmar:</label>
                                             <input name="contrasenia" type="text" onChange={this.handleChangeContrasenia} className="form-control" id="contrasenia" placeholder="Cédula" disabled={this.isDisabled(2, 'input')} />
                                         </div>
-                                        <button name="firmar" type="submit" className="btn btn-success" onClick={this.handleEtapa3} disabled={!this.state.isContrasenia} >Firmar</button>
+                                        <button name="firmar" type="submit" className="btn btn-success" onClick={this.handleEtapa3} disabled={!this.state.isContrasenia || !this.state.canFirmar} >Firmar</button>
                                     </form>
                                 </div>
                                 <div className="col-6 col-md-6 col-lg-6"></div>
@@ -797,26 +821,26 @@ class CrearEndoso extends Component {
                     </Modal.Body>
                 </Modal>
                 <Modal show={this.state.show2} onHide={() => { this.setState({ show2: false }) }}>
-                        <Modal.Header closeButton>
-                            <Modal.Title>Transacción rechazada</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <div className="row">
-                                <h6>&nbsp;Rechazaste la transacción</h6>
-                            </div>
-                            <div className="row">
-                                &nbsp;
+                    <Modal.Header closeButton>
+                        <Modal.Title>Transacción rechazada</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="row">
+                            <h6>&nbsp;Rechazaste la transacción</h6>
+                        </div>
+                        <div className="row">
+                            &nbsp;
                 </div>
-                            <div className="row">
-                                <h6>&nbsp;Para firmar el endoso necesitas confirmar la transacción</h6>
-                            </div>
-                        </Modal.Body>
-                        <Modal.Footer>
-                            <Button className="but-solid" onClick={() => { this.setState({ show2: false }) }}>
-                                Cerrar
+                        <div className="row">
+                            <h6>&nbsp;Para firmar el endoso necesitas confirmar la transacción</h6>
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button className="but-solid" onClick={() => { this.setState({ show2: false }) }}>
+                            Cerrar
                 </Button>
-                        </Modal.Footer>
-                    </Modal>
+                    </Modal.Footer>
+                </Modal>
             </div>
 
         </div>);

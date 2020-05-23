@@ -23,22 +23,22 @@ class Endosos extends Component {
     }
 
     componentDidMount() {
-        let endososAFavor =  axios.get(`/endosos/endosante/${this.state.cedulaUsuario}`, { headers: this.state.headers });
+        let endososAFavor = axios.get(`/endosos/endosante/${this.state.cedulaUsuario}`, { headers: this.state.headers });
         let endososEnContra = axios.get(`/endosos/endosatario/${this.state.cedulaUsuario}`, { headers: this.state.headers });
 
-        axios.all([endososAFavor,endososEnContra])
-            .then(axios.spread((...responses)=>{
+        axios.all([endososAFavor, endososEnContra])
+            .then(axios.spread((...responses) => {
                 let endososObtenidos = responses[0].data.concat(responses[1].data);
-                for(let x in endososObtenidos){
+                for (let x in endososObtenidos) {
                     axios.get(`pagares/${endososObtenidos[x].id_pagare}`, { headers: this.state.headers })
-                    .then(response => {
-                        let pagareLocal = response.data;
-                        endososObtenidos[x].pagare = pagareLocal;
+                        .then(response => {
+                            let pagareLocal = response.data;
+                            endososObtenidos[x].pagare = pagareLocal;
 
-                        this.setState({
-                            endosos: endososObtenidos,
+                            this.setState({
+                                endosos: endososObtenidos,
+                            });
                         });
-                    });
                 }
             }));
     }

@@ -53,6 +53,7 @@ class CrearPagare extends Component {
             show: false,
             show2: false,
             account: "",
+            canFirmar: false,
         }
 
         this.redirect = this.redirect.bind(this);
@@ -86,6 +87,7 @@ class CrearPagare extends Component {
     componentDidMount() {
         if (this.props.location.state !== undefined) {
             let { usuario } = this.props.location.state;
+            let userAddress = usuario.address;
             const { rol } = this.props.location.state;
             let y = `${rol}`;
             if (this.props.location.state.pagare === undefined) {
@@ -257,19 +259,32 @@ class CrearPagare extends Component {
 
     isWeb3() {
 
-        if (typeof web3 !== 'undefined') {
+        if (typeof window.web3 !== 'undefined') {
             let newWeb3 = new Web3(window.web3.currentProvider);
-            newWeb3.eth.getAccounts().then(accounts => {
-                if (accounts.length !== 0) {
-                    let userAddress = accounts[0];
-                    this.setState({
-                        account: userAddress,
-                    })
-                }
+            let loginAddress = this.props.getUsuario().address;
+            window.ethereum.enable().then(enabled => {
+                setInterval(() => {
+                    newWeb3.eth.getAccounts().then(accounts => {
+                        let userAddress = accounts[0];
+                        if (accounts[0] === loginAddress) {
+                            this.setState({
+                                account: userAddress,
+                                canFirmar: true,
+                            })
+                        } else {
+                            this.setState({
+                                account: loginAddress,
+                                canFirmar: false,
+                            })
+                        }
+                    });
+
+                }, 100);
+                this.setState({
+                    isweb3: true,
+                });
             });
-            this.setState({
-                isweb3: true,
-            })
+
         }
     }
 
@@ -515,7 +530,6 @@ class CrearPagare extends Component {
             }
         ).then(response => {
             let pagare = response.data;
-            console.log(pagare);
             this.setState({
                 etapa: pagare.etapa,
             });
@@ -556,7 +570,7 @@ class CrearPagare extends Component {
                         })
                     });
             });
-        }else{
+        } else {
             const vencimiento = this.state.fechaVencimiento;
             const vencimientoString = `${vencimiento.getDate()}-${vencimiento.getMonth() + 1}-${vencimiento.getFullYear()}`
             var data = {
@@ -579,7 +593,7 @@ class CrearPagare extends Component {
 
             });
         }
-        
+
 
     }
 
@@ -653,48 +667,30 @@ class CrearPagare extends Component {
         }
         let id = this.state.id;
         let txReceipt;
-        if(this.context.escenario === "Ether"){
-            eth.getTransactionReceipt(txHash, function (error, result) {
-                if (!error) {
-                    txReceipt = result;
-                    if (txReceipt != null && this.context.escenario) {
-                        
-                    } else {
-                        self.waitForTxToBeMined(txHash);
-                    }
-
+        eth.getTransactionReceipt(txHash, function (error, result) {
+            if (!error) {
+                txReceipt = result;
+                if (txReceipt != null) {
+                    axios.patch(`/pagares/${id}/etapa4`, data, { headers: { 'Content-Type': 'application/json' } })
+                        .then(response => {
+                            self.setState({
+                                isContrasenia: false,
+                                show: false,
+                                redirect: true,
+                            });
+                        })
+                } else {
+                    self.waitForTxToBeMined(txHash);
                 }
-                else
-                    console.error(error);
-            });
-        }else{
-            eth.getTransactionReceipt(txHash, function (error, result) {
-                if (!error) {
-                    txReceipt = result;
-                    if (txReceipt != null && this.context.escenario) {
-                        axios.patch(`/pagares/${id}/etapa4`, data, { headers: { 'Content-Type': 'application/json' } })
-                            .then(response => {
-                                self.setState({
-                                    isContrasenia: false,
-                                    show: false,
-                                    redirect: true,
-                                });
-                            })
-                    } else {
-                        self.waitForTxToBeMined(txHash);
-                    }
 
-                }
-                else
-                    console.error(error);
-            });
-        }
-        
+            }
+            else
+                console.error(error);
+        });
     }
 
 
     isDisabled(pEtapa, element) {
-        console.log(pEtapa, element);
         if (element === 'card') {
 
             if (pEtapa === this.state.etapa) {
@@ -1102,11 +1098,13 @@ class CrearPagare extends Component {
                                     <p>&nbsp;</p>
                                     <p className="text-center font-weight-bold">Antes de Firmar por favor revisa la previsualización del pagaré.</p>
                                     <form>
+                                        {this.state.canFirmar ? "" : <small className="error">Para firmar, ingrese a la cuenta de MetaMask con la que se registró.</small>}
+                                        {this.state.isweb3 ? "" : <small className="error">Para firmar, instale Metamask en su navegador.</small>}
                                         <div className="form-group">
                                             <label htmlFor="contrasenia">Digite su cedula para poder firmar:</label>
                                             <input name="contrasenia" type="text" onChange={this.handleChangeContrasenia} className="form-control" id="contrasenia" placeholder="Cédula" disabled={this.isDisabled(3, 'input')} />
                                         </div>
-                                        <button name="firmar" type="submit" className="btn btn-success" onClick={this.handleEtapa4} disabled={!this.state.isContrasenia && this.state.isweb3}>Firmar</button>
+                                        <button name="firmar" type="submit" className="btn btn-success" onClick={this.handleEtapa4} disabled={!this.state.isContrasenia || !this.state.isweb3 || !this.state.canFirmar}>Firmar</button>
                                     </form>
                                 </div>
                                 <div className="col-6 col-md-6 col-lg-6"></div>

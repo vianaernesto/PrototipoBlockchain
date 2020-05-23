@@ -57,7 +57,6 @@ class Balance extends Component {
                     const contract = new EthContract(eth);
                     const MiniToken = contract(abiEther);
                     const miniToken = MiniToken.at(addressEther);
-                    console.log(miniToken);
                     miniToken.getIdPagaresDeudor(account, { from: account })
                         .then(encontra => {
                             let encontraPagares = encontra[0];
