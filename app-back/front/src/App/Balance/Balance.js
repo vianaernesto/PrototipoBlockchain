@@ -59,15 +59,16 @@ class Balance extends Component {
                     const miniToken = MiniToken.at(addressEther);
                     miniToken.getIdPagaresDeudor(account, { from: account })
                         .then(encontra => {
+                            console.log(encontra[0]);
                             let encontraPagares = encontra[0];
                             let id = 0;
                             for (let i = 0; i < encontraPagares.length; i++) {
-                                id = newWeb3.utils.toDecimal(encontraPagares[i]);
+                                id = newWeb3.utils.toDecimal(encontraPagares[i].words[0]);
                                 miniToken.getPagareById(id)
                                     .then(pagare => {
                                         let info = pagare[3].split(',');
                                         let newPagare = {
-                                            id: i+1,
+                                            id: id,
                                             valorWei: newWeb3.utils.fromWei(pagare[0]),
                                             valorPeso: this.convertidorEtheraPesos(newWeb3.utils.fromWei(pagare[0])),
                                             addresssDeudor: pagare[1],
@@ -76,7 +77,7 @@ class Balance extends Component {
                                             idAcreedor: info[4],
                                             nombreAcreedor: info[5],
                                             idDeudor: info[6],
-                                            nombewDedudor:info[7],
+                                            nombreDeudor: info[7],
                                             firmado: pagare[4],
                                             fechaCreacion: new Date(newWeb3.utils.toDecimal(pagare[5]) * 1000),
                                             fechaVencimiento: new Date(newWeb3.utils.toDecimal(pagare[6]) * 1000),
@@ -99,12 +100,12 @@ class Balance extends Component {
                             let afavorPagares = afavor[0];
                             let id = 0;
                             for (let i = 0; i < afavorPagares.length; i++) {
-                                id = newWeb3.utils.toDecimal(afavorPagares[i]);
+                                id = newWeb3.utils.toDecimal(afavorPagares[i].words[0]);
                                 miniToken.getPagareById(id)
                                     .then(pagare => {
                                         let info = pagare[3].split(',');
                                         let newPagare = {
-                                            id: i+10,
+                                            id: id,
                                             valorWei: newWeb3.utils.fromWei(pagare[0]),
                                             valorPeso: this.convertidorEtheraPesos(newWeb3.utils.fromWei(pagare[0])),
                                             addresssDeudor: pagare[1],
@@ -113,7 +114,7 @@ class Balance extends Component {
                                             idAcreedor: info[4],
                                             nombreAcreedor: info[5],
                                             idDeudor: info[6],
-                                            nombewDedudor:info[7],
+                                            nombreDeudor: info[7],
                                             firmado: pagare[4],
                                             fechaCreacion: new Date(newWeb3.utils.toDecimal(pagare[5]) * 1000),
                                             fechaVencimiento: new Date(newWeb3.utils.toDecimal(pagare[6]) * 1000),
@@ -260,7 +261,7 @@ class Balance extends Component {
                 <div className="row align-items-center justify-content-center">
                     <div className="col-lg-3 col-3 col-md-3"></div>
                     <div className="col-lg-6 col-6 col-md-6">
-                        <Link to={{ pathname: '/pagare/crear/', state: { rol: 'deudor', escenario: this.context.escenario, usuario: { nombre: this.state.nombre, cedula: this.state.cedulaUsuario } } }}  ><button className="but-solid">Crear Pagaré como Deudor </button></Link>
+                        <Link to={{ pathname: '/pagare/crear/', state: { rol: 'acreedor', escenario: this.context.escenario, usuario: { nombre: this.state.nombre, cedula: this.state.cedulaUsuario } } }}  ><button className="but-solid">Crear Pagaré como Acreedor</button></Link>
                     </div>
                     <div className="col-lg-6 col-6 col-md-6"></div>
                 </div>
@@ -280,7 +281,7 @@ class Balance extends Component {
                                                         <div className="card" style={{ width: "18em" }}>
                                                             <div className="card-body">
                                                                 <p className="card-text text-left" style={{ fontWeight: "bold" }}>Pagaré #{x.id}</p>
-                                                                <h2 className="card-title">${`${x.valorPeso}`}<br/>{`(Ether: ${x.valorWei})`}</h2>
+                                                                <h2 className="card-title">${`${x.valorPeso}`}<br />{`(Ether: ${x.valorWei})`}</h2>
                                                             </div>
                                                             <ul className="list-group list-group-flush">
                                                                 <li className="list-group-item"><span className="text-left font-weight-bold">Deudor: </span><span className="text-right">{x.nombreDeudor}</span></li>
@@ -289,7 +290,9 @@ class Balance extends Component {
                                                                 <li className="list-group-item"><span className="text-left font-weight-bold">Creado en: </span><span className="text-right">{x.lugarCreacion}</span></li>
                                                                 <li className="list-group-item"><span className="text-left font-weight-bold">Fecha de vencimiento: </span><span className="text-right">{new Date(x.fechaVencimiento).getDate()}/{new Date(x.fechaVencimiento).getMonth() + 1}/{new Date(x.fechaVencimiento).getFullYear()}</span></li>
                                                             </ul>
-
+                                                            <div className="card-body">
+                                                                <Link to={{ pathname: '/pagareDetail/', state: { pagare: x, usuario: { nombre: this.state.nombre, cedula: this.state.cedulaUsuario },rol:'acreedor'} }} ><button className={`but-solid`} >Ver en Detalle</button></Link>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div className="col-lg-4 col-md-2 col-sd-12"></div>
@@ -299,26 +302,29 @@ class Balance extends Component {
                                         } else {
                                             return (
                                                 <div key={i}>
-                                                <div className="col-lg-4 col-md-2 col-sd-12"></div>
-                                                <div
-                                                    className="col-lg-4 col-md-8 col-sd-12"
-                                                    style={{ marginTop: "2em" }}>
-                                                    <div className="card" style={{ width: "18em" }}>
-                                                        <div className="card-body">
-                                                            <p className="card-text text-left" style={{ fontWeight: "bold" }}>Pagaré #{x.id}</p>
-                                                            <h2 className="card-title">${`${x.valorPeso}`}<br/>{`(Ether: ${x.valorWei})`}</h2>
+                                                    <div className="col-lg-4 col-md-2 col-sd-12"></div>
+                                                    <div
+                                                        className="col-lg-4 col-md-8 col-sd-12"
+                                                        style={{ marginTop: "2em" }}>
+                                                        <div className="card" style={{ width: "18em" }}>
+                                                            <div className="card-body">
+                                                                <p className="card-text text-left" style={{ fontWeight: "bold" }}>Pagaré #{x.id}</p>
+                                                                <h2 className="card-title">${`${x.valorPeso}`}<br />{`(Ether: ${x.valorWei})`}</h2>
+                                                            </div>
+                                                            <ul className="list-group list-group-flush">
+                                                                <li className="list-group-item"><span className="text-left font-weight-bold">Deudor: </span><span className="text-right">{x.nombreDeudor}</span></li>
+                                                                <li className="list-group-item"><span className="text-left font-weight-bold">Cédula del Deudor: </span><span className="text-right">{x.idDeudor}</span></li>
+                                                                <li className="list-group-item"><span className="text-left font-weight-bold">Creado el: </span><span className="text-right">{new Date(x.fechaCreacion).getDate()}/{new Date(x.fechaCreacion).getMonth() + 1}/{new Date(x.fechaCreacion).getFullYear()}</span></li>
+                                                                <li className="list-group-item"><span className="text-left font-weight-bold">Creado en: </span><span className="text-right">{x.lugarCreacion}</span></li>
+                                                                <li className="list-group-item"><span className="text-left font-weight-bold">Fecha de vencimiento: </span><span className="text-right">{new Date(x.fechaVencimiento).getDate()}/{new Date(x.fechaVencimiento).getMonth() + 1}/{new Date(x.fechaVencimiento).getFullYear()}</span></li>
+                                                            </ul>
+                                                            <div className={`card-body  ${this.etapaLevel(2)}`}>
+                                                                <p className="card-text text-left" style={{ fontWeight: "bold", color: "white", textAlign: "white" }}>Esperando Firma del deudor</p>
+                                                            </div>
                                                         </div>
-                                                        <ul className="list-group list-group-flush">
-                                                            <li className="list-group-item"><span className="text-left font-weight-bold">Deudor: </span><span className="text-right">{x.nombreDeudor}</span></li>
-                                                            <li className="list-group-item"><span className="text-left font-weight-bold">Cédula del Deudor: </span><span className="text-right">{x.idDeudor}</span></li>
-                                                            <li className="list-group-item"><span className="text-left font-weight-bold">Creado el: </span><span className="text-right">{new Date(x.fechaCreacion).getDate()}/{new Date(x.fechaCreacion).getMonth() + 1}/{new Date(x.fechaCreacion).getFullYear()}</span></li>
-                                                            <li className="list-group-item"><span className="text-left font-weight-bold">Creado en: </span><span className="text-right">{x.lugarCreacion}</span></li>
-                                                            <li className="list-group-item"><span className="text-left font-weight-bold">Fecha de vencimiento: </span><span className="text-right">{new Date(x.fechaVencimiento).getDate()}/{new Date(x.fechaVencimiento).getMonth() + 1}/{new Date(x.fechaVencimiento).getFullYear()}</span></li>
-                                                        </ul>
                                                     </div>
+                                                    <div className="col-lg-4 col-md-2 col-sd-12"></div>
                                                 </div>
-                                                <div className="col-lg-4 col-md-2 col-sd-12"></div>
-                                            </div>
                                             );
                                         }
 
@@ -353,7 +359,7 @@ class Balance extends Component {
                                                         <div className="card" style={{ width: "18em" }}>
                                                             <div className="card-body">
                                                                 <p className="card-text text-left" style={{ fontWeight: "bold" }}>Pagaré #{x.id}</p>
-                                                                <h2 className="card-title">${`${x.valorPeso}`}<br/>{`(Ether: ${x.valorWei})`}</h2>
+                                                                <h2 className="card-title">${`${x.valorPeso}`}<br />{`(Ether: ${x.valorWei})`}</h2>
                                                             </div>
                                                             <ul className="list-group list-group-flush">
                                                                 <li className="list-group-item"><span className="text-left font-weight-bold">Acreedor: </span><span className="text-right">{x.nombreAcreedor}</span></li>
@@ -363,7 +369,7 @@ class Balance extends Component {
                                                                 <li className="list-group-item"><span className="text-left font-weight-bold">Fecha de vencimiento: </span><span className="text-right">{new Date(x.fechaVencimiento).getDate()}/{new Date(x.fechaVencimiento).getMonth() + 1}/{new Date(x.fechaVencimiento).getFullYear()}</span></li>
                                                             </ul>
                                                             <div className="card-body">
-                                                                <Link to={{ pathname: '/pagareDetail/', state: { pagare: x, } }} ><button className={`but-solid`} >Ver en Detalle</button></Link>
+                                                                <Link to={{ pathname: '/pagareDetail/', state: { pagare: x, usuario: { nombre: this.state.nombre, cedula: this.state.cedulaUsuario}, rol:'deudor' } }} ><button className={`but-solid`} >Ver en Detalle</button></Link>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -374,29 +380,29 @@ class Balance extends Component {
                                         } else {
                                             return (
                                                 <div key={i}>
-                                                <div className="col-lg-4 col-md-2 col-sd-12"></div>
-                                                <div
-                                                    className="col-lg-4 col-md-8 col-sd-12"
-                                                    style={{ marginTop: "2em" }}>
-                                                    <div className="card" style={{ width: "18em" }}>
-                                                        <div className="card-body">
-                                                            <p className="card-text text-left" style={{ fontWeight: "bold" }}>Pagaré #{x.id}</p>
-                                                            <h2 className="card-title">${`${x.valorPeso}`}<br/>{`(Ether: ${x.valorWei})`}</h2>
-                                                        </div>
-                                                        <ul className="list-group list-group-flush">
-                                                            <li className="list-group-item"><span className="text-left font-weight-bold">Acreedor: </span><span className="text-right">{x.nombreAcreedor}</span></li>
-                                                            <li className="list-group-item"><span className="text-left font-weight-bold">Cédula del Acreedor: </span><span className="text-right">{x.idAcreedor}</span></li>
-                                                            <li className="list-group-item"><span className="text-left font-weight-bold">Creado el: </span><span className="text-right">{new Date(x.fechaCreacion).getDate()}/{new Date(x.fechaCreacion).getMonth() + 1}/{new Date(x.fechaCreacion).getFullYear()}</span></li>
-                                                            <li className="list-group-item"><span className="text-left font-weight-bold">Creado en: </span><span className="text-right">{x.lugarCreacion}</span></li>
-                                                            <li className="list-group-item"><span className="text-left font-weight-bold">Fecha de vencimiento: </span><span className="text-right">{new Date(x.fechaVencimiento).getDate()}/{new Date(x.fechaVencimiento).getMonth() + 1}/{new Date(x.fechaVencimiento).getFullYear()}</span></li>
-                                                        </ul>
-                                                        <div className="card-body">
-                                                        <Link to={{ pathname: '/pagare/crear/', state: { rol: 'deudor', pagare: x,escenario: this.context.escenario, usuario: { nombre: this.state.nombre, cedula: this.state.cedulaUsuario } } }} ><button className={`but-solid ${this.etapaLevel(2)}`} style={{ borderColor: this.etapaColor(2) }}>Firmar</button></Link>
+                                                    <div className="col-lg-4 col-md-2 col-sd-12"></div>
+                                                    <div
+                                                        className="col-lg-4 col-md-8 col-sd-12"
+                                                        style={{ marginTop: "2em" }}>
+                                                        <div className="card" style={{ width: "18em" }}>
+                                                            <div className="card-body">
+                                                                <p className="card-text text-left" style={{ fontWeight: "bold" }}>Pagaré #{x.id}</p>
+                                                                <h2 className="card-title">${`${x.valorPeso}`}<br />{`(Ether: ${x.valorWei})`}</h2>
+                                                            </div>
+                                                            <ul className="list-group list-group-flush">
+                                                                <li className="list-group-item"><span className="text-left font-weight-bold">Acreedor: </span><span className="text-right">{x.nombreAcreedor}</span></li>
+                                                                <li className="list-group-item"><span className="text-left font-weight-bold">Cédula del Acreedor: </span><span className="text-right">{x.idAcreedor}</span></li>
+                                                                <li className="list-group-item"><span className="text-left font-weight-bold">Creado el: </span><span className="text-right">{new Date(x.fechaCreacion).getDate()}/{new Date(x.fechaCreacion).getMonth() + 1}/{new Date(x.fechaCreacion).getFullYear()}</span></li>
+                                                                <li className="list-group-item"><span className="text-left font-weight-bold">Creado en: </span><span className="text-right">{x.lugarCreacion}</span></li>
+                                                                <li className="list-group-item"><span className="text-left font-weight-bold">Fecha de vencimiento: </span><span className="text-right">{new Date(x.fechaVencimiento).getDate()}/{new Date(x.fechaVencimiento).getMonth() + 1}/{new Date(x.fechaVencimiento).getFullYear()}</span></li>
+                                                            </ul>
+                                                            <div className="card-body">
+                                                                <Link to={{ pathname: '/pagare/crear/', state: { rol: 'deudor', pagare: x, escenario: this.context.escenario, usuario: { nombre: this.state.nombre, cedula: this.state.cedulaUsuario } } }} ><button className={`but-solid ${this.etapaLevel(2)}`} style={{ borderColor: this.etapaColor(2) }}>Firmar</button></Link>
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                    <div className="col-lg-4 col-md-2 col-sd-12"></div>
                                                 </div>
-                                                <div className="col-lg-4 col-md-2 col-sd-12"></div>
-                                            </div>
                                             );
                                         }
 
@@ -448,7 +454,7 @@ class Balance extends Component {
                 <Switch>
                     <PrivateRoute exact path="/pagare/crear/:rol" component={(props) => <CrearPagare {...props} getUsuario={this.getUsuario} />} getUsuario={this.getUsuario} />
                 </Switch>
-                
+
             </div>
         );
     }

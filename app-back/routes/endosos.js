@@ -57,6 +57,7 @@ router.post("/pagare/:id/etapa1", (req, res) =>{
      })
      .catch(err =>{
          if(err.response.status === 401){
+             console.log(err.response.data);
              res.status(401).json(err.data);
          }else{
             res.status(500).json({message: err});

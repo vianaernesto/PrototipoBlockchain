@@ -44,6 +44,7 @@ class CrearEndoso extends Component {
             show: false,
             show2: false,
             canFirmar: false,
+            puedeEndosarEtherToggle:true,
         }
         this.setUpPDF = this.setUpPDF.bind(this);
         this.renderEtapa1 = this.renderEtapa1.bind(this);
@@ -58,85 +59,99 @@ class CrearEndoso extends Component {
         this.isWeb3 = this.isWeb3.bind(this);
         this.waitForTxToBeMined = this.waitForTxToBeMined.bind(this);
         this.getConfirmation = this.getConfirmation.bind(this);
+        this.renderNormal = this.renderNormal.bind(this);
+        this.renderEther = this.renderEther.bind(this);
+        this.getConfirmationEther = this.getConfirmationEther.bind(this);
     }
 
     componentDidMount() {
-        if (this.props.location.state !== undefined) {
-            let pagare = this.props.location.state.pagare;
-            axios.get(`/endosos/pagare/${pagare._id}`, { headers: this.state.headers })
-                .then(response => {
+            if (this.props.location.state !== undefined) {
+                let pagare = this.props.location.state.pagare;
+                if(this.context.escenario === "Ether" && typeof window.web3 !== 'undefined'){
                     this.setState({
-                        endososAnteriores: response.data,
+                        etapa : 4,
+                        id_endosante :pagare.idAcreedor,
+                        nombre_endosante: pagare.nombreAcreedor,
+                        id_pagare: pagare.id,
                     });
-                    this.setUpPDF(pagare, endoso, response.data);
-                });
-            let endoso = this.props.location.state.endoso;
-            let endoso2 = this.props.location.state.endoso2;
-            if (endoso2 !== undefined) {
+                    this.setUpPDF(pagare, undefined, []);
+                }else{
+                    axios.get(`/endosos/pagare/${pagare._id}`, { headers: this.state.headers })
+                        .then(response => {
+                            this.setState({
+                                endososAnteriores: response.data,
+                            });
+                            this.setUpPDF(pagare, endoso, response.data);
+                        });
+                    let endoso = this.props.location.state.endoso;
+                    let endoso2 = this.props.location.state.endoso2;
+                    if (endoso2 !== undefined) {
+                        this.setState({
+                            _id: "",
+                            codigo_retiro: "",
+                            confirmacion_transaccion: "",
+                            es_ultimo_endoso: null,
+                            etapa: 0,
+                            fecha: "",
+                            firma: "",
+                            hash_transaccion: "",
+                            id_anterior_endoso: "",
+                            id_endosante: endoso2.id_endosatario,
+                            id_endosatario: 0,
+                            id_pagare: endoso2.id_pagare,
+                            nombre_endosante: endoso2.nombre_endosatario,
+                            nombre_endosatario: "",
+                            redirect: false,
+                            isSame: false,
+                            isContrasenia: false,
+                        });
+                    }
+                    else if (endoso === undefined) {
+                        this.setState({
+                            _id: "",
+                            codigo_retiro: "",
+                            confirmacion_transaccion: "",
+                            es_ultimo_endoso: null,
+                            etapa: 0,
+                            fecha: "",
+                            firma: "",
+                            hash_transaccion: "",
+                            id_anterior_endoso: "",
+                            id_endosante: pagare.idAcreedor,
+                            id_endosatario: 0,
+                            id_pagare: pagare._id,
+                            nombre_endosante: pagare.nombreAcreedor,
+                            nombre_endosatario: "",
+                            redirect: false,
+                        });
+                    } else if (endoso !== undefined) {
+                        this.setState({
+                            _id: endoso._id,
+                            codigo_retiro: endoso.codigo_retiro,
+                            confirmacion_transaccion: endoso.confirmacion_transaccion,
+                            es_ultimo_endoso: endoso.es_ultimo_endoso,
+                            etapa: endoso.etapa,
+                            fecha: endoso.fecha,
+                            firma: endoso.firma,
+                            hash_transaccion: endoso.hash_transaccion,
+                            id_anterior_endoso: endoso.id_anterior_endoso,
+                            id_endosante: endoso.id_endosante,
+                            id_endosatario: endoso.id_endosatario,
+                            id_pagare: endoso.id_pagare,
+                            nombre_endosante: endoso.nombre_endosante,
+                            nombre_endosatario: endoso.nombre_endosatario,
+                            redirect: false,
+                            isSame: false,
+                            isContrasenia: false,
+                        });
+                    }
+                }
+                
+            } else {
                 this.setState({
-                    _id: "",
-                    codigo_retiro: "",
-                    confirmacion_transaccion: "",
-                    es_ultimo_endoso: null,
-                    etapa: 0,
-                    fecha: "",
-                    firma: "",
-                    hash_transaccion: "",
-                    id_anterior_endoso: "",
-                    id_endosante: endoso2.id_endosatario,
-                    id_endosatario: 0,
-                    id_pagare: endoso2.id_pagare,
-                    nombre_endosante: endoso2.nombre_endosatario,
-                    nombre_endosatario: "",
-                    redirect: false,
-                    isSame: false,
-                    isContrasenia: false,
-                });
+                    redirect: true
+                })
             }
-            else if (endoso === undefined) {
-                this.setState({
-                    _id: "",
-                    codigo_retiro: "",
-                    confirmacion_transaccion: "",
-                    es_ultimo_endoso: null,
-                    etapa: 0,
-                    fecha: "",
-                    firma: "",
-                    hash_transaccion: "",
-                    id_anterior_endoso: "",
-                    id_endosante: pagare.idAcreedor,
-                    id_endosatario: 0,
-                    id_pagare: pagare._id,
-                    nombre_endosante: pagare.nombreAcreedor,
-                    nombre_endosatario: "",
-                    redirect: false,
-                });
-            } else if (endoso !== undefined) {
-                this.setState({
-                    _id: endoso._id,
-                    codigo_retiro: endoso.codigo_retiro,
-                    confirmacion_transaccion: endoso.confirmacion_transaccion,
-                    es_ultimo_endoso: endoso.es_ultimo_endoso,
-                    etapa: endoso.etapa,
-                    fecha: endoso.fecha,
-                    firma: endoso.firma,
-                    hash_transaccion: endoso.hash_transaccion,
-                    id_anterior_endoso: endoso.id_anterior_endoso,
-                    id_endosante: endoso.id_endosante,
-                    id_endosatario: endoso.id_endosatario,
-                    id_pagare: endoso.id_pagare,
-                    nombre_endosante: endoso.nombre_endosante,
-                    nombre_endosatario: endoso.nombre_endosatario,
-                    redirect: false,
-                    isSame: false,
-                    isContrasenia: false,
-                });
-            }
-        } else {
-            this.setState({
-                redirect: true
-            })
-        }
         this.isWeb3();
     }
 
@@ -185,7 +200,11 @@ class CrearEndoso extends Component {
         let endososPasados = endososAnteriores;
         const doc = new jsPDF();
         doc.setFontSize(15);
-        doc.text(10, 25, `Pagaré No.  ${pagare._id}`);
+        if(this.context.escenario === "Ether"){
+            doc.text(10, 25, `Pagaré No.  ${pagare.id}`);
+        }else{
+            doc.text(10, 25, `Pagaré No.  ${pagare._id}`);
+        }
         doc.setFontSize(12);
         doc.text(10, 35, `Yo ${pagare.nombreDeudor} idenficado con la cedula de ciudadanía ${pagare.idDeudor} me obligo `);
         doc.text(10, 42, `a pagar solidaria e incondicionalmente a favor de ${pagare.nombreAcreedor} `);
@@ -195,7 +214,9 @@ class CrearEndoso extends Component {
         doc.text(10, 77, `Autorizo irrevocablemente a ${pagare.nombreAcreedor} o a quien represente sus derechos`)
         doc.text(10, 84, `o al tenedor legítimo del presente título valor para declarar el plazo vencido el presente`)
         doc.text(10, 91, `pagaré y que para tal evento proceda inmediatamente.`)
-        doc.text(10, 260, `Firma: ${pagare.firma}`)
+        if(pagare.firma){
+            doc.text(10, 260, `Firma: ${pagare.firma}`)
+        }
         doc.text(10, 270, `Cedula: ${pagare.idDeudor}`)
         //QR
         var urlString = 'https://ropsten.etherscan.io/tx/' + pagare.firma
@@ -206,7 +227,9 @@ class CrearEndoso extends Component {
         // pdf changes
         doc.addImage(myImage, 'JPEG', 5, 190, imgWidth * 4, imgHeight * 4);
 
-        doc.addPage();
+        if(endososPasados.length !== 0 || endoso !== undefined){
+            doc.addPage();
+        }
         for (let x in endososPasados) {
             if (counter > 290) {
                 doc.addPage();
@@ -401,6 +424,7 @@ class CrearEndoso extends Component {
 
         }).catch(err => {
             if (err.response.status === 401 || err.response.status === 500) {
+                console.log(err);
                 toast.error("El pagaré ya está en un proceso de endoso, revise los endosos pendientes");
                 setTimeout(() => {
                     this.setState({
@@ -586,6 +610,10 @@ class CrearEndoso extends Component {
             this.setState({
                 isContrasenia: true,
             });
+        }else{
+            this.setState({
+                isContrasenia: false,
+            });
         }
     }
 
@@ -601,8 +629,29 @@ class CrearEndoso extends Component {
             const miniToken = MiniToken.at(addressEther);
             let fechaDate = new Date();
             let fecha = Math.round(fechaDate / 1000);
-            console.log(account, parseInt(this.state.id_pagare), fecha);
-            console.log(miniToken);
+            axios.get(`/users/${this.state.id_endosatario}`)
+                .then(res =>{
+                    let endosatario = res.data.address;
+                    if(typeof endosatario === "undefined"){
+                        this.setState({
+                            puedeEndosarEtherToggle:false,
+                        })
+                    }else{
+                        this.setState({
+                            puedeEndosarEtherToggle:true,
+                        })
+                        miniToken.endosarPagare(endosatario, parseInt(this.state.id_pagare),fecha, {from: account})
+                            .then((txHash) =>{
+                                this.waitForTxToBeMined(txHash);
+                            }).catch(error =>{
+                                console.log(error);
+                                this.setState({
+                                    show2:true,
+                                });
+                            })
+                    }
+                });
+            
         } else {
             const eth = new Eth(window.web3.currentProvider);
             const account = this.state.account;
@@ -628,13 +677,45 @@ class CrearEndoso extends Component {
 
     waitForTxToBeMined(txHash) {
         var self = this;
-        this.setState({
+        self.setState({
             show: true,
         });
-        setTimeout(function () {
-            self.getConfirmation(txHash);
-        }, 10000);
+        if(this.context.escenario !== "Ether"){
+            setTimeout(function () {
+                self.getConfirmation(txHash);
+            }, 10000);
+        }else{
+            setTimeout(function () {
+                self.getConfirmationEther(txHash);
+            }, 10000);
+        }
+        
     };
+
+    getConfirmationEther(txHash){
+        let eth = window.web3.eth;
+        var self = this;
+        let data = {
+            firma: txHash,
+        }
+        let txReceipt;
+        eth.getTransactionReceipt(txHash, function (error, result) {
+            if (!error) {
+                txReceipt = result;
+                if (txReceipt != null) {
+                    self.setState({
+                        isContrasenia: false,
+                        redirect: true,
+                    });
+                } else {
+                    self.waitForTxToBeMined(txHash);
+                }
+
+            }
+            else
+                console.error(error);
+        });
+    }
 
     getConfirmation(txHash) {
         let eth = window.web3.eth;
@@ -760,6 +841,95 @@ class CrearEndoso extends Component {
         )
     }
 
+    renderEther(){
+        return(
+            <div className="col-md-6 col-6 col-lg-6">
+            <div className="row">&nbsp;</div>
+            <div id="accordion">
+                <div className="card">
+                    <div className="card-header" id="etapa1">
+                        <div className="col-md-10">
+                            <button className={`btn ${this.isSuccessful(4, 'card')}  ${this.isDisabled(4, 'card')}`} data-toggle="collapse" data-target="#etapa1Collapse" aria-expanded={this.isDisabled(4, 'aria')} aria-controls="etapa1Collapse" disabled={this.isDisabled(4, 'button')}>
+                                <h5 className={`title-card${this.isSuccessful(4, 'title')}`}>Formulario</h5>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="etapa1Collapse" className={`collapse ${this.isDisabled(4, 'accordion')}`} aria-labelledby="etapa1" data-parent="#accordion">
+                        <div className="row">
+                            <form>
+                                <div className="row">
+                                    <div className="col-1 col-md-1 col-lg-1"></div>
+                                    <div className="col-5 col-md-5 col-lg-5">
+                                        <div className="form-group">
+                                            <label htmlFor="nombre_endosante">Nombre del Endosante</label>
+                                            <input name="nombre_endosante" type="text" className="form-control" id="nombre_endosante" onChange={this.handleChangeEtapa1} aria-describedby="nombre_endosante" placeholder={this.placeholder(4, 'nombre_endosante')} disabled={true} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="id_endosante">Cédula del Endosante</label>
+                                            <input name="id_endosante" type="number" min="0" className="form-control" id="id_endosante" onChange={this.handleChangeEtapa1} placeholder={this.placeholder(4, 'id_endosante')} disabled={true} />
+                                        </div>
+
+                                    </div>
+                                    <div className="col-5 col-md-5 col-lg-5">
+                                        <div className="form-group">
+                                            <label htmlFor="nombre_endosatario">Nombre del Endosatario</label>
+                                            <input name="nombre_endosatario" type="text" className="form-control" id="nombre_endosatario" onChange={this.handleChangeEtapa1} aria-describedby="nombre_endosatario" placeholder={this.placeholder(4, 'nombre_endosatario')} disabled={this.isDisabled(4, 'button')} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="id_endosatario">Cédula del Endosatario</label>
+                                            <input name="id_endosatario" type="number" min="0" className="form-control" id="id_endosatario" onChange={this.handleChangeEtapa1} placeholder={this.placeholder(0, 'id_endosatario')} disabled={this.isDisabled(4, 'button')} />
+                                        </div>
+                                    </div>
+                                    <div className="col-1 col-md-1 col-lg-1"></div>
+                                </div>
+                                <div className="row">
+                                </div>
+                                <div className="row">
+                                    <div className="col-3 col-md-3 col-lg-3"></div>
+                                    <div className="col-6 col-md-6 col-lg-6">
+                                        <button type="submit" className="btn btn-primary" onClick={this.handleEtapa3} style={{ visibility: this.isDisabled(4, 'submit') }}>Endosar</button>
+                                    </div>
+                                    <div className="col-1 col-md-1 col-lg-1"></div>
+                                </div>
+
+                            </form>
+                        </div>
+                        <div className="row">{this.state.puedeEndosarEtherToggle ? "" : <small className="error centered">El endosatario no existe en nuestro registro.</small>}</div>
+                        <div className="row">&nbsp;</div>
+                    </div>
+                </div>
+            </div>
+            <div className="row">&nbsp;</div>
+        </div>
+        )
+    }
+
+    renderNormal(){
+        return(
+            <div className="col-md-6 col-6 col-lg-6">
+            <div className="row">&nbsp;</div>
+            {this.renderEtapa1()}
+            <div className="row">&nbsp;</div>
+            {this.renderEtapa2()}
+            <div className="row">&nbsp;</div>
+            {this.renderEtapa3()}
+            <div className="row">&nbsp;</div>
+            <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+            />
+        </div>
+        );
+    }
+
     render() {
         return (<div className="content-body host">
             {this.redirect()}
@@ -776,26 +946,9 @@ class CrearEndoso extends Component {
                 </div>
             </div>
             <div className="row">
-                <div className="col-md-6 col-6 col-lg-6">
-                    <div className="row">&nbsp;</div>
-                    {this.renderEtapa1()}
-                    <div className="row">&nbsp;</div>
-                    {this.renderEtapa2()}
-                    <div className="row">&nbsp;</div>
-                    {this.renderEtapa3()}
-                    <div className="row">&nbsp;</div>
-                    <ToastContainer
-                        position="top-right"
-                        autoClose={5000}
-                        hideProgressBar={false}
-                        newestOnTop={false}
-                        closeOnClick
-                        rtl={false}
-                        pauseOnFocusLoss
-                        draggable
-                        pauseOnHover
-                    />
-                </div>
+                {this.context.escenario === "Ether"
+                ? this.renderEther()
+                : this.renderNormal()}
                 <div className="col-md-6 col-lg-6 col-6">
                     {this.renderPDF()}
                 </div>

@@ -2,6 +2,11 @@ import React, { Component } from "react";
 import { Link } from "react-router-dom";
 import Cookies from "universal-cookie";
 import axios from "axios";
+import { abiEther, addressEther } from '../metamask/abi.js';
+import { EscenarioContext } from '../Context/context';
+import Web3 from 'web3';
+import Eth from 'ethjs-query';
+import EthContract from 'ethjs-contract';
 
 const cookies = new Cookies();
 
@@ -23,24 +28,74 @@ class Endosos extends Component {
     }
 
     componentDidMount() {
-        let endososAFavor = axios.get(`/endosos/endosante/${this.state.cedulaUsuario}`, { headers: this.state.headers });
-        let endososEnContra = axios.get(`/endosos/endosatario/${this.state.cedulaUsuario}`, { headers: this.state.headers });
-
-        axios.all([endososAFavor, endososEnContra])
-            .then(axios.spread((...responses) => {
-                let endososObtenidos = responses[0].data.concat(responses[1].data);
-                for (let x in endososObtenidos) {
-                    axios.get(`pagares/${endososObtenidos[x].id_pagare}`, { headers: this.state.headers })
-                        .then(response => {
-                            let pagareLocal = response.data;
-                            endososObtenidos[x].pagare = pagareLocal;
-
-                            this.setState({
-                                endosos: endososObtenidos,
-                            });
+        if(this.context.escenario === "Ether" && typeof window.web3 !== 'undefined'){
+            let newWeb3 = new Web3(window.web3.currentProvider);
+            window.ethereum.enable().then(enabled => {
+                setInterval(() => {
+                    if(this.state.endosos.length === 0){
+                        newWeb3.eth.getAccounts().then(accounts => {
+                            const eth = new Eth(window.web3.currentProvider);
+                            const account = accounts[0];
+                            const contract = new EthContract(eth);
+                            const MiniToken = contract(abiEther);
+                            const miniToken = MiniToken.at(addressEther);
+                            let pagaresDeudor = miniToken.getIdPagaresDeudor(account, { from: account });
+                            let pagaresAcreedor = miniToken.getIdPagaresAcreedor(account, { from: account });
+                            Promise.all([pagaresAcreedor,pagaresDeudor])
+                                .then(value =>{
+                                    let pagaresAFavor = value[0][0];
+                                    let pagaresEnContra = value[1][0];
+                                    for(let x in pagaresAFavor){
+                                        miniToken.getEndososPagare(x,{from:account})
+                                            .then(res =>{
+                                                this.setState(state => {
+                                                    const endosos = state.endosos.concat(res[0]);
+                                                    return {
+                                                        endosos,
+                                                    };
+                                                });
+                                            });
+                                    }
+                                    for(let y in pagaresEnContra){
+                                        miniToken.getEndososPagare(y,{from:account})
+                                        .then(res =>{
+                                            this.setState(state => {
+                                                const endosos = state.endosos.concat(res[0]);
+                                                return {
+                                                    endosos,
+                                                };
+                                            });
+                                        });
+                                    }
+                                })
                         });
-                }
-            }));
+                    }     
+                }, 100);
+                this.setState({
+                    isweb3: true,
+                });
+            });
+        }else{
+            let endososAFavor = axios.get(`/endosos/endosante/${this.state.cedulaUsuario}`, { headers: this.state.headers });
+            let endososEnContra = axios.get(`/endosos/endosatario/${this.state.cedulaUsuario}`, { headers: this.state.headers });
+
+            axios.all([endososAFavor, endososEnContra])
+                .then(axios.spread((...responses) => {
+                    let endososObtenidos = responses[0].data.concat(responses[1].data);
+                    for (let x in endososObtenidos) {
+                        axios.get(`pagares/${endososObtenidos[x].id_pagare}`, { headers: this.state.headers })
+                            .then(response => {
+                                let pagareLocal = response.data;
+                                endososObtenidos[x].pagare = pagareLocal;
+
+                                this.setState({
+                                    endosos: endososObtenidos,
+                                });
+                            });
+                    }
+                }));
+        }
+        
     }
 
     etapaLevel(etapa) {
@@ -84,12 +139,12 @@ class Endosos extends Component {
                 <div className="row align-items-center justify-content-center">
                     {this.hasPendiente()
                         ? <React.Fragment>
-                            <div className="col-lg-4 col-4 col-md-6 text-center">
+                            <div className="col-lg-5 col-5 col-md-5 text-center">
                                 <h1 className="display-4 text-center font-weight-bold">
                                     Pendientes
                         </h1>
                             </div>
-                            <div className="col-lg-8 col-8 col-md-8 text-center">
+                            <div className="col-lg-7 col-7 col-md-7 text-center">
                                 <h1 className="display-4 text-center font-weight-bold">
                                     Terminados
                         </h1>
@@ -108,7 +163,7 @@ class Endosos extends Component {
                         ? <React.Fragment>
                             {this.hasPendiente()
                                 ? <React.Fragment>
-                                    <div className="col-lg-4 col-4 col-md-4">
+                                    <div className="col-lg-5 col-5 col-md-5">
                                         {this.state.endosos.map((x, i) => {
                                             if (x.etapa < 3) {
                                                 return (
@@ -145,7 +200,7 @@ class Endosos extends Component {
                                             }
                                         })}
                                     </div>
-                                    <div className="col-lg-8 col-8 col-md-8">
+                                    <div className="col-lg-7 col-7 col-md-7">
                                         {this.state.endosos.map((y, j) => {
                                             if (y.etapa === 3) {
                                                 return (
@@ -180,7 +235,7 @@ class Endosos extends Component {
                                     </div>
                                 </React.Fragment>
                                 : <React.Fragment>
-                                    <div className="col-lg-12 col-12 col-md-12">
+                                    <div className="row">
                                         {this.state.endosos.map((y, j) => {
                                             if (y.etapa === 3 && y.pagare) {
                                                 return (
@@ -220,5 +275,7 @@ class Endosos extends Component {
             </div>);
     }
 }
+
+Endosos.contextType = EscenarioContext;
 
 export default Endosos;
