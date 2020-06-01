@@ -9,6 +9,7 @@ import Button from 'react-bootstrap/Button';
 import Eth from 'ethjs-query';
 import EthContract from 'ethjs-contract';
 import { address2, abi2 } from '../metamask/abi.js';
+import { EscenarioContext } from '../Context/context';
 
 import './Registrar.css';
 
@@ -31,7 +32,7 @@ const validateForm = (errors) => {
     return valid;
 }
 
-export default class Registrar extends Component {
+class Registrar extends Component {
     constructor(props) {
         super(props);
 
@@ -54,7 +55,7 @@ export default class Registrar extends Component {
             show: false,
             show2: false,
             domain: '',
-            domainSubmit: 'propio',
+            domainSubmit: '',
             modalState: 'subdominio',
             alreadyRegistered: false,
         }
@@ -86,7 +87,7 @@ export default class Registrar extends Component {
                                 if (accounts.length !== 0 && accounts[0] !== this.state.address) {
                                     isuser = true;
                                     let userAddress = accounts[0];
-                                    if(this.context.escenario === "Ether"){
+                                    if(this.context.escenario === "Ens"){
                                         ens.reverse(userAddress).name()
                                         .then(response => {
                                             ens.resolver(response).addr()
@@ -95,7 +96,8 @@ export default class Registrar extends Component {
                                                         this.setState({
                                                             isUser: isuser,
                                                             address: userAddress,
-                                                            domain: response
+                                                            domain: response,
+                                                            domainSubmit: 'propio'
                                                         });
                                                     } else {
                                                         this.setState({
@@ -287,7 +289,7 @@ export default class Registrar extends Component {
                     });
                 }
             });
-        } else if (this.context.escenario !== 'ENS') {
+        } else if (this.context.escenario !== 'Ens') {
             await axios.post(
                 '/users',
                 {
@@ -569,7 +571,6 @@ export default class Registrar extends Component {
 
     render() {
         const { errores } = this.state;
-
         let incorrectMessage;
 
         let cedula = "Ejemplo: 123456789";
@@ -655,7 +656,7 @@ export default class Registrar extends Component {
                                                                 {errores.contrasenia.length > 0 &&
                                                                     <span className='error'>{errores.contrasenia}</span>}
                                                             </Form.Group>
-                                                            {this.state.domain !== '' && this.context.escenario === 'ENS'
+                                                            {this.state.domain !== '' && this.context.escenario === 'Ens'
                                                                 ? <Form.Group>
                                                                     <Form.Label htmlFor="domain">Escoja su dominio para el servicio de nombres de Ethereum *:</Form.Label>
                                                                     <Form.Check onChange={this.handleChange}>
@@ -734,3 +735,7 @@ export default class Registrar extends Component {
         )
     }
 }
+
+Registrar.contextType = EscenarioContext;
+
+export default Registrar;
