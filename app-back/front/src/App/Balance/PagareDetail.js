@@ -107,7 +107,7 @@ class PagareDetail extends Component {
             });
         }
             else{
-                if(pagare.ultimoEndoso !== "null"){
+                if(pagare.ultimoEndoso !== "null" && this.props.location.state.usuario){
                     axios.get(`/endosos/pagare/${pagare._id}`,{headers : {"Content-Type" : "application/json"}})
                         .then(response =>{
                             let data = response.data.reverse();
