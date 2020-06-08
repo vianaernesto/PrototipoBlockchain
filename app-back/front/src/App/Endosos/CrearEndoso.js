@@ -43,6 +43,7 @@ class CrearEndoso extends Component {
             account: '',
             show: false,
             show2: false,
+            show3: false,
             canFirmar: false,
             puedeEndosarEtherToggle:true,
         }
@@ -640,14 +641,20 @@ class CrearEndoso extends Component {
                         this.setState({
                             puedeEndosarEtherToggle:true,
                         })
-                        miniToken.endosarPagare(endosatario, parseInt(this.state.id_pagare),fecha, {from: account})
+                        miniToken.endosarPagare(endosatario, Web3.utils.fromDecimal(this.state.id_pagare),fecha, {from: account})
                             .then((txHash) =>{
                                 this.waitForTxToBeMined(txHash);
                             }).catch(error =>{
                                 console.log(error);
-                                this.setState({
-                                    show2:true,
-                                });
+                                if(error.toString().includes("-32603")){
+                                    this.setState({
+                                        show3: true,
+                                    })
+                                }else{
+                                    this.setState({
+                                        show2: true,
+                                    })
+                                }
                             })
                     }
                 });
@@ -987,6 +994,24 @@ class CrearEndoso extends Component {
                         <div className="row">
                             <h6>&nbsp;Para firmar el endoso necesitas confirmar la transacción</h6>
                         </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button className="but-solid" onClick={() => { this.setState({ show2: false }) }}>
+                            Cerrar
+                </Button>
+                    </Modal.Footer>
+                </Modal>
+                <Modal show={this.state.show3} onHide={() => { this.setState({ show3: false }) }}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Dirección billetera incorrecta</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="row">
+                            <h6>&nbsp;Verifica que tengas la cuenta de metamask con la que te registraste.</h6>
+                        </div>
+                        <div className="row">
+                            &nbsp;
+                </div>
                     </Modal.Body>
                     <Modal.Footer>
                         <Button className="but-solid" onClick={() => { this.setState({ show2: false }) }}>

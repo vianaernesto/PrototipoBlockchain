@@ -47,7 +47,6 @@ class Balance extends Component {
     }
 
     getPagares() {
-
         if (this.context.escenario === 'Ether' && typeof window.web3 !== 'undefined') {
             let newWeb3 = new Web3(window.web3.currentProvider);
             newWeb3.eth.getAccounts().then(accounts => {
@@ -59,16 +58,16 @@ class Balance extends Component {
                     const miniToken = MiniToken.at(addressEther);
                     miniToken.getIdPagaresDeudor(account, { from: account })
                         .then(encontra => {
-                            console.log(encontra[0]);
                             let encontraPagares = encontra[0];
                             let id = 0;
                             for (let i = 0; i < encontraPagares.length; i++) {
                                 id = newWeb3.utils.toDecimal(encontraPagares[i].words[0]);
+                                let newId = newWeb3.utils.toDecimal(encontraPagares[i].words[0]);
                                 miniToken.getPagareById(id)
                                     .then(pagare => {
                                         let info = pagare[3].split(',');
                                         let newPagare = {
-                                            id: id,
+                                            id: newId,
                                             valorWei: newWeb3.utils.fromWei(pagare[0]),
                                             valorPeso: this.convertidorEtheraPesos(newWeb3.utils.fromWei(pagare[0])),
                                             addresssDeudor: pagare[1],
@@ -101,11 +100,14 @@ class Balance extends Component {
                             let id = 0;
                             for (let i = 0; i < afavorPagares.length; i++) {
                                 id = newWeb3.utils.toDecimal(afavorPagares[i].words[0]);
+                                let newId = newWeb3.utils.toDecimal(afavorPagares[i].words[0]);
+                                console.log(newId)
                                 miniToken.getPagareById(id)
                                     .then(pagare => {
                                         let info = pagare[3].split(',');
+                                        console.log(pagare);
                                         let newPagare = {
-                                            id: id,
+                                            id: newId,
                                             valorWei: newWeb3.utils.fromWei(pagare[0]),
                                             valorPeso: this.convertidorEtheraPesos(newWeb3.utils.fromWei(pagare[0])),
                                             addresssDeudor: pagare[1],
@@ -299,7 +301,7 @@ class Balance extends Component {
                                                 </div>
 
                                             );
-                                        } else {
+                                        } else if(!x.firmado && x.id !==0) {
                                             return (
                                                 <div key={i}>
                                                     <div className="col-lg-4 col-md-2 col-sd-12"></div>
@@ -377,7 +379,7 @@ class Balance extends Component {
                                                 </div>
 
                                             );
-                                        } else {
+                                        } else if(!x.firmado && x.id !== 0){
                                             return (
                                                 <div key={i}>
                                                     <div className="col-lg-4 col-md-2 col-sd-12"></div>

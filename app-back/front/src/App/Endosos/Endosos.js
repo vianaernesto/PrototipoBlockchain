@@ -46,7 +46,9 @@ class Endosos extends Component {
                                     let pagaresAFavor = value[0][0];
                                     let pagaresEnContra = value[1][0];
                                     for(let x in pagaresAFavor){
-                                        miniToken.getEndososPagare(x,{from:account})
+                                        let id = pagaresAFavor[x].words[0];
+                                        if(id !== 0){
+                                            miniToken.getEndososPagare(id,{from:account})
                                             .then(res =>{
                                                 this.setState(state => {
                                                     const endosos = state.endosos.concat(res[0]);
@@ -55,17 +57,32 @@ class Endosos extends Component {
                                                     };
                                                 });
                                             });
+                                        }
                                     }
                                     for(let y in pagaresEnContra){
-                                        miniToken.getEndososPagare(y,{from:account})
-                                        .then(res =>{
-                                            this.setState(state => {
-                                                const endosos = state.endosos.concat(res[0]);
-                                                return {
-                                                    endosos,
-                                                };
+                                        let id = 0;
+                                        if(typeof pagaresEnContra[y].words[0] !== undefined){
+                                            id = pagaresEnContra[y].words[0];
+                                        }else{
+                                            id = 0;
+                                        }
+                                        if(id !== 0){
+                                            miniToken.getEndososPagare(id,{from:account})
+                                            .then(res =>{
+                                                if(res.length > 0){
+                                                    //console.log(res[0][0])
+                                                    //miniToken.getEndosoById()
+                                                    this.setState(state => {
+                                                        const endosos = state.endosos.concat(res[0]);
+                                                        return {
+                                                            endosos,
+                                                        };
+                                                    });
+                                                }
+                                                
                                             });
-                                        });
+                                        }
+                                        
                                     }
                                 })
                         });

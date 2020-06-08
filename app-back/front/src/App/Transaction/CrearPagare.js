@@ -52,6 +52,7 @@ class CrearPagare extends Component {
             isweb3: false,
             show: false,
             show2: false,
+            show3: false,
             account: "",
             canFirmar: false,
         }
@@ -428,7 +429,6 @@ class CrearPagare extends Component {
     }
 
     handleChangeDate(date) {
-        console.log(date);
         this.setState({
             fechaVencimiento: date,
         })
@@ -587,7 +587,6 @@ class CrearPagare extends Component {
                 let wei = this.convertidorPesosAWei(this.state.valor);
                 const eth = new Eth(window.web3.currentProvider);
                 const address = user.data.address;
-                console.log(address)
                 const account = this.state.account;
                 const contract = new EthContract(eth);
                 const MiniToken = contract(abiEther);
@@ -597,9 +596,16 @@ class CrearPagare extends Component {
                         this.waitForTxToBeMined(txHash);
                     }).catch(error => {
                         console.log(error);
-                        this.setState({
-                            show2: true,
-                        })
+                        if(error.toString().includes("-32603")){
+                            this.setState({
+                                show3: true,
+                            })
+                        }else{
+                            this.setState({
+                                show2: true,
+                            })
+                        }
+                        
                     });
             });
         } else {
@@ -1510,6 +1516,24 @@ class CrearPagare extends Component {
                     </Modal.Body>
                     <Modal.Footer>
                         <Button className="but-solid" onClick={() => { this.setState({ show2: false }) }}>
+                            Cerrar
+                </Button>
+                    </Modal.Footer>
+                </Modal>
+                <Modal show={this.state.show3} onHide={() => { this.setState({ show3: false }) }}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Dirección billetera incorrecta</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="row">
+                            <h6>&nbsp;Verifica que tengas la cuenta de metamask con la que te registraste.</h6>
+                        </div>
+                        <div className="row">
+                            &nbsp;
+                </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button className="but-solid" onClick={() => { this.setState({ show3: false }) }}>
                             Cerrar
                 </Button>
                     </Modal.Footer>
